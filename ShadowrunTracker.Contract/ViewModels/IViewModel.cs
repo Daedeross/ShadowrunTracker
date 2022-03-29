@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace ShadowrunTracker.Contract.ViewModels
+namespace ShadowrunTracker.ViewModels
 {
     public interface IViewModel : INotifyPropertyChanged
     {

@@ -1,6 +1,6 @@
 ﻿using ReactiveUI;
-using ShadowrunTracker.Contract.Data;
-using ShadowrunTracker.Contract.ViewModels;
+using ShadowrunTracker.Data;
+using ShadowrunTracker.ViewModels;
 
 namespace ShadowrunTracker.ViewModels.Traits
 {

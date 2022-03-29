@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows10.0.18362.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Configuration\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Castle.Windsor" Version="5.1.1" />
+    <PackageReference Include="MahApps.Metro" Version="2.4.9" />
+    <PackageReference Include="ModernWpfUI.MahApps" Version="0.9.4" />
+    <PackageReference Include="ReactiveUI.WPF" Version="17.1.50" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ShadowrunTracker.Contract\ShadowrunTracker.Contract.csproj" />
+    <ProjectReference Include="..\ShadowrunTracker.Data\ShadowrunTracker.Data.csproj" />
+    <ProjectReference Include="..\ShadowrunTracker.ViewModels\ShadowrunTracker.ViewModels.csproj" />
+  </ItemGroup>
+
+</Project>

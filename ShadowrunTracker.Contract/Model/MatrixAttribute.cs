@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ShadowrunTracker.Contract.Model
+namespace ShadowrunTracker.Model
 {
     public enum MatrixAttribute
     {

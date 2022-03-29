@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ShadowrunTracker.Contract\ShadowrunTracker.Contract.csproj" />
+    <ProjectReference Include="..\ShadowrunTracker.Data\ShadowrunTracker.Data.csproj" />
+    <ProjectReference Include="..\ShadowrunTracker.Utils\ShadowrunTracker.Utils.csproj" />
+    <ProjectReference Include="..\ShadowrunTracker.ViewModels\ShadowrunTracker.ViewModels.csproj" />
+  </ItemGroup>
+
+</Project>

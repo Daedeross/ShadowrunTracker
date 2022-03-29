@@ -1,11 +1,7 @@
-﻿namespace ShadowrunTracker.Contract.Data
+﻿namespace ShadowrunTracker.Data
 {
     public interface ILeveledTrait : ITrait
     {
         int Rating { get; set; }
-
-        int BonusRating { get; set; }
-
-        int AugmentedRating { get; set; }
     }
 }

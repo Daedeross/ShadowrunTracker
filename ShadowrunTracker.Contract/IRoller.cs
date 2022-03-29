@@ -1,6 +1,6 @@
-﻿using ShadowrunTracker.Contract.Model;
+﻿using ShadowrunTracker.Model;
 
-namespace ShadowrunTracker.Contract
+namespace ShadowrunTracker
 {
     public interface IRoller
     {

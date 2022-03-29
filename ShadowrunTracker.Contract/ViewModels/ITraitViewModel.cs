@@ -1,4 +1,4 @@
-﻿namespace ShadowrunTracker.Contract.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
     /// <summary>
     /// Base interface for all traits other than Attributes (for now),

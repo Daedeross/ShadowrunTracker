@@ -1,6 +1,6 @@
 ﻿using ReactiveUI;
-using ShadowrunTracker.Contract.Model;
-using ShadowrunTracker.Contract.ViewModels;
+using ShadowrunTracker.Model;
+using ShadowrunTracker.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -54,7 +54,7 @@ namespace ShadowrunTracker.ViewModels
             return new InitiativeRoll
             {
                 CurrentState = Character.CurrentState,
-            }
+            };
         }
 
         #region Private Methods
@@ -69,21 +69,21 @@ namespace ShadowrunTracker.ViewModels
             switch (_roll.CurrentState)
             {
                 case InitiativeState.Physical:
-                    if (e.PropertyName == nameof(CharacterViewModel.AugmentedPhysicalInitiative))
+                    if (e.PropertyName == nameof(CharacterViewModel.PhysicalInitiative))
                     {
-                        if (_roll.ScoreUsed != Character.AugmentedPhysicalInitiative)
+                        if (_roll.ScoreUsed != Character.PhysicalInitiative)
                         {
-                            var diff = _roll.ScoreUsed - Character.AugmentedPhysicalInitiative;
-                            _roll.ScoreUsed = Character.AugmentedPhysicalInitiative;
+                            var diff = _roll.ScoreUsed - Character.PhysicalInitiative;
+                            _roll.ScoreUsed = Character.PhysicalInitiative;
                             InitiativeScore += diff;
                         }
                     }
-                    else if (e.PropertyName == nameof(CharacterViewModel.AugmentedPhysicalInitiativeDice))
+                    else if (e.PropertyName == nameof(CharacterViewModel.PhysicalInitiativeDice))
                     {
-                        if (_roll.DiceUsed != Character.AugmentedPhysicalInitiativeDice)
+                        if (_roll.DiceUsed != Character.PhysicalInitiativeDice)
                         {
-                            var diff = _roll.DiceUsed - Character.AugmentedPhysicalInitiativeDice;
-                            _roll.DiceUsed = Character.AugmentedPhysicalInitiativeDice;
+                            var diff = _roll.DiceUsed - Character.PhysicalInitiativeDice;
+                            _roll.DiceUsed = Character.PhysicalInitiativeDice;
 
                             if (diff > 0)
                             {
@@ -95,21 +95,21 @@ namespace ShadowrunTracker.ViewModels
                     }
                     return;
                 case InitiativeState.Astral:
-                    if (e.PropertyName == nameof(CharacterViewModel.AugmentedAstralInitiative))
+                    if (e.PropertyName == nameof(CharacterViewModel.AstralInitiative))
                     {
-                        if (_roll.ScoreUsed != Character.AugmentedAstralInitiative)
+                        if (_roll.ScoreUsed != Character.AstralInitiative)
                         {
-                            var diff = _roll.ScoreUsed - Character.AugmentedAstralInitiative;
-                            _roll.ScoreUsed = Character.AugmentedAstralInitiative;
+                            var diff = _roll.ScoreUsed - Character.AstralInitiative;
+                            _roll.ScoreUsed = Character.AstralInitiative;
                             InitiativeScore += diff;
                         }
                     }
-                    else if (e.PropertyName == nameof(CharacterViewModel.AugmentedAstralInitiativeDice))
+                    else if (e.PropertyName == nameof(CharacterViewModel.AstralInitiativeDice))
                     {
-                        if (_roll.DiceUsed != Character.AugmentedAstralInitiativeDice)
+                        if (_roll.DiceUsed != Character.AstralInitiativeDice)
                         {
-                            var diff = _roll.DiceUsed - Character.AugmentedAstralInitiativeDice;
-                            _roll.DiceUsed = Character.AugmentedAstralInitiativeDice;
+                            var diff = _roll.DiceUsed - Character.AstralInitiativeDice;
+                            _roll.DiceUsed = Character.AstralInitiativeDice;
 
                             if (diff > 0)
                             {

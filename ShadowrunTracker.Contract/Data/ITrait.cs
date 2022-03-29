@@ -1,4 +1,4 @@
-﻿namespace ShadowrunTracker.Contract.Data
+﻿namespace ShadowrunTracker.Data
 {
     public interface ITrait
     {

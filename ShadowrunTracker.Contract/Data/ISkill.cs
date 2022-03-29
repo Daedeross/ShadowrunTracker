@@ -1,6 +1,6 @@
-﻿using ShadowrunTracker.Contract.Model;
+﻿using ShadowrunTracker.Model;
 
-namespace ShadowrunTracker.Contract.Data
+namespace ShadowrunTracker.Data
 {
     public interface ISkill : ILeveledTrait
     {

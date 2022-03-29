@@ -1,6 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 
-namespace ShadowrunTracker.Contract.ViewModels
+namespace ShadowrunTracker.ViewModels
 {
     public interface ICombatRoundViewModel : IViewModel
     {

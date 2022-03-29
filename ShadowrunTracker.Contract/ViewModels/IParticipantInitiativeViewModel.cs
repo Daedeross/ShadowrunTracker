@@ -1,6 +1,6 @@
-﻿using ShadowrunTracker.Contract.Model;
+﻿using ShadowrunTracker.Model;
 
-namespace ShadowrunTracker.Contract.ViewModels
+namespace ShadowrunTracker.ViewModels
 {
     public interface IParticipantInitiativeViewModel
     {

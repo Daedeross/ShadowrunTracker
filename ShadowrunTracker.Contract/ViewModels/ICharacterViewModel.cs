@@ -1,11 +1,11 @@
-﻿using ShadowrunTracker.Contract.Model;
+﻿using ShadowrunTracker.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Text;
 
-namespace ShadowrunTracker.Contract.ViewModels
+namespace ShadowrunTracker.ViewModels
 {
     public interface ICharacterViewModel : IViewModel
     {
@@ -17,14 +17,14 @@ namespace ShadowrunTracker.Contract.ViewModels
 
         #region Attributes
 
-        int Body { get; set; }
-        int Agility { get; set; }
-        int Reaction { get; set; }
-        int Strength { get; set; }
-        int Charisma { get; set; }
-        int Intuition { get; set; }
-        int Logic { get; set; }
-        int Willpower { get; set; }
+        int BaseBody { get; set; }
+        int BaseAgility { get; set; }
+        int BaseReaction { get; set; }
+        int BaseStrength { get; set; }
+        int BaseCharisma { get; set; }
+        int BaseIntuition { get; set; }
+        int BaseLogic { get; set; }
+        int BaseWillpower { get; set; }
 
         int BonusBody { get; set; }
         int BonusAgility { get; set; }
@@ -35,41 +35,43 @@ namespace ShadowrunTracker.Contract.ViewModels
         int BonusLogic { get; set; }
         int BonusWillpower { get; set; }
 
-        int AugmentedBody { get; }
-        int AugmentedAgility { get; }
-        int AugmentedReaction { get; }
-        int AugmentedStrength { get; }
-        int AugmentedCharisma { get; }
-        int AugmentedIntuition { get; }
-        int AugmentedLogic { get; }
-        int AugmentedWillpower { get; }
+        int Body { get; }
+        int Agility { get; }
+        int Reaction { get; }
+        int Strength { get; }
+        int Charisma { get; }
+        int Intuition { get; }
+        int Logic { get; }
+        int Willpower { get; }
 
         #endregion
 
         #region Special Attributes
 
-        int Edge { get; set; }
-        int Magic { get; set; }
-        int Resonance { get; set; }
+        int BaseEdge { get; set; }
+        int BaseMagic { get; set; }
+        int BaseResonance { get; set; }
 
         int BonusEdge { get; set; }
         int BonusMagic { get; set; }
         int BonusResonance { get; set; }
 
-        int AugmentedEdge { get; }
-        int AugmentedMagic { get; }
-        int AugmentedResonance { get; }
+        int Edge { get; }
+        int Magic { get; }
+        int Resonance { get; }
+
+        int EdgePoints { get; set; }
 
         #endregion
 
         #region Damage Track
 
         int BonusPhysicalBoxes { get; set; }
-        int AugmentedPhysicalBoxes { get; }
+        int PhysicalBoxes { get; }
         int PhysicalDamage { get; }
 
         int BonusStunBoxes { get; set; }
-        int AugmentedStunBoxes { get; }
+        int StunBoxes { get; }
         int StunDamage { get; }
 
         bool PainEditor { get; set; }
@@ -86,28 +88,28 @@ namespace ShadowrunTracker.Contract.ViewModels
 
         int BonusPhysicalInitiative { get; set; }
         int BonusPhysicalInitiativeDice { get; set; }
-        int AugmentedPhysicalInitiative { get; }
-        int AugmentedPhysicalInitiativeDice { get; }
+        int PhysicalInitiative { get; }
+        int PhysicalInitiativeDice { get; }
 
         int BonusAstralInitiative { get; set; }
         int BonusAstralInitiativeDice { get; set; }
-        int AugmentedAstralInitiative { get; }
-        int AugmentedAstralInitiativeDice { get; }
+        int AstralInitiative { get; }
+        int AstralInitiativeDice { get; }
 
         int BonusMatrixARInitiative { get; set; }
         int BonusMatrixARInitiativeDice { get; set; }
-        int AugmentedMatrixARInitiative { get; }
-        int AugmentedMatrixARInitiativeDice { get; }
+        int MatrixARInitiative { get; }
+        int MatrixARInitiativeDice { get; }
 
         int BonusMatrixColdInitiative { get; set; }
         int BonusMatrixColdInitiativeDice { get; set; }
-        int AugmentedMatrixColdInitiative { get; }
-        int AugmentedMatrixColdInitiativeDice { get; }
+        int MatrixColdInitiative { get; }
+        int MatrixColdInitiativeDice { get; }
 
         int BonusMatrixHotInitiative { get; set; }
         int BonusMatrixHotInitiativeDice { get; set; }
-        int AugmentedMatrixHotInitiative { get; }
-        int AugmentedMatrixHotInitiativeDice { get; }
+        int MatrixHotInitiative { get; }
+        int MatrixHotInitiativeDice { get; }
 
         InitiativeState CurrentState { get; set; }
 
@@ -125,16 +127,16 @@ namespace ShadowrunTracker.Contract.ViewModels
         #region Limits
 
         int BonusPhysicalLimit { get; set; }
-        int AugmentedPhysicalLimit { get; }
+        int PhysicalLimit { get; }
 
         int BonusMentalLimit { get; set; }
-        int AugmentedMentalLimit { get; }
+        int MentalLimit { get; }
 
         int BonusSocialLimit { get; set; }
-        int AugmentedSocialLimit { get; }
+        int SocialLimit { get; }
 
         int BonusAstralLimit { get; set; }
-        int AugmentedAstralLimit { get; }
+        int AstralLimit { get; }
 
         #endregion
 

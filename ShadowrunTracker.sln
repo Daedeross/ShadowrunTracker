@@ -3,15 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShadowrunTracker.Avalonia", "ShadowrunTracker.Avalonia\ShadowrunTracker.Avalonia.csproj", "{5C5AC215-02CE-47D3-B6E1-DCBC8F698754}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShadowrunTracker.Contract", "ShadowrunTracker.Contract\ShadowrunTracker.Contract.csproj", "{CC39D4EF-EA71-402E-8B2D-1A4C5B95D1BB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShadowrunTracker.ViewModels", "ShadowrunTracker.ViewModels\ShadowrunTracker.ViewModels.csproj", "{146BE6C0-38A1-4DD3-9E9B-3B440EF88E2C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShadowrunTracker.Data", "ShadowrunTracker.Data\ShadowrunTracker.Data.csproj", "{FA22B989-BEBE-4B55-BB88-427C2C869560}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShadowrunTracker.Tests", "ShadowrunTracker.Tests\ShadowrunTracker.Tests.csproj", "{EC4763F9-1990-4126-86D3-5015E56C04AD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShadowrunTracker.Tests", "ShadowrunTracker.Tests\ShadowrunTracker.Tests.csproj", "{EC4763F9-1990-4126-86D3-5015E56C04AD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShadowrunTracker.Utils", "ShadowrunTracker.Utils\ShadowrunTracker.Utils.csproj", "{2F235F66-78C0-4497-9602-9A9E118323D2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShadowrunTracker.Wpf", "ShadowrunTracker.Wpf\ShadowrunTracker.Wpf.csproj", "{A23C83DB-A39E-4D9B-AED0-BEC3D319C365}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShadowrunTools.Mock", "ShadowrunTools.Mock\ShadowrunTools.Mock.csproj", "{CF2415BE-4B45-4EE1-8C16-4688A156E8F4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,10 +23,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5C5AC215-02CE-47D3-B6E1-DCBC8F698754}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5C5AC215-02CE-47D3-B6E1-DCBC8F698754}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5C5AC215-02CE-47D3-B6E1-DCBC8F698754}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5C5AC215-02CE-47D3-B6E1-DCBC8F698754}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CC39D4EF-EA71-402E-8B2D-1A4C5B95D1BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CC39D4EF-EA71-402E-8B2D-1A4C5B95D1BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC39D4EF-EA71-402E-8B2D-1A4C5B95D1BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -39,6 +39,18 @@ Global
 		{EC4763F9-1990-4126-86D3-5015E56C04AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EC4763F9-1990-4126-86D3-5015E56C04AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EC4763F9-1990-4126-86D3-5015E56C04AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F235F66-78C0-4497-9602-9A9E118323D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F235F66-78C0-4497-9602-9A9E118323D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F235F66-78C0-4497-9602-9A9E118323D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F235F66-78C0-4497-9602-9A9E118323D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A23C83DB-A39E-4D9B-AED0-BEC3D319C365}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A23C83DB-A39E-4D9B-AED0-BEC3D319C365}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A23C83DB-A39E-4D9B-AED0-BEC3D319C365}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A23C83DB-A39E-4D9B-AED0-BEC3D319C365}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF2415BE-4B45-4EE1-8C16-4688A156E8F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF2415BE-4B45-4EE1-8C16-4688A156E8F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF2415BE-4B45-4EE1-8C16-4688A156E8F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF2415BE-4B45-4EE1-8C16-4688A156E8F4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

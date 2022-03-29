@@ -1,10 +1,11 @@
-﻿using ShadowrunTracker.Contract.Data;
+﻿using ShadowrunTracker.Data;
 using System.Runtime.Serialization;
 
 namespace ShadowrunTracker.Data.Traits
 {
     [DataContract]
-    public class Trait : ITrait
+    [KnownType(nameof(KnownTypes))]
+    public abstract class Trait : ITrait
     {
         [DataMember(IsRequired = true)]
         public string Name { get; set; } = string.Empty;
@@ -20,5 +21,12 @@ namespace ShadowrunTracker.Data.Traits
 
         [DataMember]
         public int Page { get; set; }
+
+
+        public static string[] KnownTypes = new[]
+        {
+            nameof(LeveledTrait),
+            nameof(Skill),
+        };
     }
 }

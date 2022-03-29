@@ -1,11 +1,10 @@
 ﻿using ReactiveUI;
-using ShadowrunTracker.Contract.Data;
-using ShadowrunTracker.Contract.Model;
-using ShadowrunTracker.Contract.ViewModels;
+using ShadowrunTracker.Data;
+using ShadowrunTracker.Model;
 
 namespace ShadowrunTracker.ViewModels.Traits
 {
-    public class SkillViewModel : LeveledTraitViewModel, ILeveledTraitViewModel
+    public class SkillViewModel : LeveledTraitViewModel, ISkillViewModel
     {
         public SkillViewModel(ISkill skill)
             : base(skill)

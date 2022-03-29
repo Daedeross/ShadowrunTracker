@@ -1,6 +1,6 @@
-﻿using ShadowrunTracker.Contract.Model;
+﻿using ShadowrunTracker.Model;
 
-namespace ShadowrunTracker.Contract.ViewModels
+namespace ShadowrunTracker.ViewModels
 {
     public interface IImprovementViewModel : IViewModel
     {
@@ -24,22 +24,22 @@ namespace ShadowrunTracker.Contract.ViewModels
         /// </summary>
         int Value { get; set; }
 
-        /// <summary>
-        /// True if the improvement has a valid target and is applied.
-        /// </summary>
-        bool IsValid { get; }
+        ///// <summary>
+        ///// True if the improvement has a valid target and is applied.
+        ///// </summary>
+        //bool IsValid { get; }
 
-        /// <summary>
-        /// To be called when the improvement is added to the character
-        /// </summary>
-        /// <param name="character"></param>
-        /// <returns>True if the improvement is valid and applied, otherwise false.</returns>
-        bool OnAdd(ICharacterViewModel character);
+        ///// <summary>
+        ///// To be called when the improvement is added to the character
+        ///// </summary>
+        ///// <param name="character"></param>
+        ///// <returns>True if the improvement is valid and applied, otherwise false.</returns>
+        //bool OnAdd(ICharacterViewModel character);
 
-        /// <summary>
-        /// To be called when the improvement is added to the character
-        /// </summary>
-        /// <param name="character"></param>
-        void OnRemove(ICharacterViewModel character);
+        ///// <summary>
+        ///// To be called when the improvement is added to the character
+        ///// </summary>
+        ///// <param name="character"></param>
+        //void OnRemove(ICharacterViewModel character);
     }
 }

@@ -1,4 +1,4 @@
-﻿using ShadowrunTracker.Contract.Data;
+﻿using ShadowrunTracker.Data;
 using System.Runtime.Serialization;
 
 namespace ShadowrunTracker.Data.Traits
@@ -8,9 +8,7 @@ namespace ShadowrunTracker.Data.Traits
     {
         [DataMember]
         public int Rating { get; set; }
-        [DataMember]
-        public int BonusRating { get; set; }
-        [DataMember]
-        public int AugmentedRating { get; set; }
+        //[DataMember]
+        //public int BonusRating { get; set; }
     }
 }

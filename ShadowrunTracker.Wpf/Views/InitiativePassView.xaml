@@ -1,0 +1,32 @@
+﻿<UserControl x:Class="ShadowrunTracker.Wpf.Views.InitiativePassView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+             mc:Ignorable="d"
+             d:DesignHeight="650" d:DesignWidth="900">
+    <UserControl.Resources>
+        <CollectionViewSource x:Key="participantsCVS" Source="{Binding Participants}">
+            <CollectionViewSource.SortDescriptions>
+                <scm:SortDescription PropertyName="Acted" Direction="Descending" />
+                <scm:SortDescription PropertyName="InitiativeScore" Direction="Descending" />
+                <scm:SortDescription PropertyName="Character.Edge" Direction="Descending" />
+                <scm:SortDescription PropertyName="Character.Reaction" Direction="Descending" />
+                <scm:SortDescription PropertyName="Character.Intuition" Direction="Descending" />
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
+    </UserControl.Resources>
+    <Grid>
+        <ListView ItemsSource="{Binding participantsCVS}">
+            <ListView.View>
+                <GridView>
+                    <GridView.Columns>
+                        <GridViewColumn DisplayMemberBinding="{Binding InitiativeScore}" Header="Init" />
+                        <GridViewColumn DisplayMemberBinding="{Binding Name}" Header="Participant" />
+                    </GridView.Columns>
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </Grid>
+</UserControl>

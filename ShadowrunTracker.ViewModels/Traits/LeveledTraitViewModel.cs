@@ -1,6 +1,6 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.Contract.Data;
-using ShadowrunTracker.Contract.ViewModels;
+﻿using ShadowrunTools.Model;
+using ShadowrunTracker.Data;
+using ShadowrunTracker.Utils;
 
 namespace ShadowrunTracker.ViewModels.Traits
 {
@@ -9,36 +9,25 @@ namespace ShadowrunTracker.ViewModels.Traits
         public LeveledTraitViewModel(ILeveledTrait trait)
             : base(trait)
         {
-
+            m_BaseRating = trait.Rating;
         }
 
-        private int _rating;
-        public int Rating
+        private int m_BaseRating;
+        public int BaseRating
         {
-            get => _rating;
-            set => this.RaiseAndSetIfChanged(ref _rating, value);
+            get => m_BaseRating;
+            set => this.SetAndRaiseIfChanged(ref m_BaseRating, value);
         }
 
-        private int _bonusRating;
+        private int m_BonusRating;
         public int BonusRating
         {
-            get => _bonusRating;
-            set => this.RaiseAndSetIfChanged(ref _bonusRating, value);
+            get => m_BonusRating;
+            set => this.SetAndRaiseIfChanged(ref m_BonusRating, value);
         }
 
-        public int AugmentedRating
-        {
-            get => _rating + _bonusRating;
-            set
-            {
-                int bonus = value - _rating;
-                if (bonus != _bonusRating)
-                {
-                    _bonusRating = bonus;
-                    this.RaisePropertyChanged(nameof(BonusRating));
-                    this.RaisePropertyChanged(nameof(AugmentedRating));
-                }
-            }
-        }
+        [DependsOn(nameof(BaseRating))]
+        [DependsOn(nameof(BonusRating))]
+        public int AugmentedRating => m_BaseRating + m_BonusRating;
     }
 }

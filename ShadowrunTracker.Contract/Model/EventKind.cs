@@ -1,4 +1,4 @@
-﻿namespace ShadowrunTracker.Contract.Model
+﻿namespace ShadowrunTracker.Model
 {
     public enum EventKind
     {

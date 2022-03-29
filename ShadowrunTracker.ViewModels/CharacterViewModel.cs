@@ -1,12 +1,17 @@
 ﻿using ReactiveUI;
-using ShadowrunTracker.Contract;
-using ShadowrunTracker.Contract.Data;
-using ShadowrunTracker.Contract.Model;
-using ShadowrunTracker.Contract.ViewModels;
+using ShadowrunTracker;
+using ShadowrunTracker.Data;
+using ShadowrunTracker.Model;
+using ShadowrunTracker.ViewModels;
+using ShadowrunTracker.Utils;
 using ShadowrunTracker.ViewModels.Traits;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Collections.Specialized;
+using System.Collections.Generic;
+using ShadowrunTracker.ViewModels.Internal;
+using ShadowrunTools.Model;
 
 namespace ShadowrunTracker.ViewModels
 {
@@ -21,13 +26,41 @@ namespace ShadowrunTracker.ViewModels
         const int PenaltyPerSpell = -2;
 
         private readonly IRoller _roller;
+        private readonly Dictionary<IImprovementViewModel, BonusHandler> _bonusHandlers;
 
         public CharacterViewModel(IRoller roller)
         {
             _roller = roller ?? throw new ArgumentNullException(nameof(roller));
 
+            m_Alias    = string.Empty;
+            m_IsPlayer = false;
+            m_Player   = string.Empty;
+
+            m_Essence = 6m;
+
+            m_BaseBody      = 1;
+            m_BaseAgility   = 1;
+            m_BaseReaction  = 1;
+            m_BaseStrength  = 1;
+            m_BaseCharisma  = 1;
+            m_BaseIntuition = 1;
+            m_BaseLogic     = 1;
+            m_BaseWillpower = 1;
+
+            m_BaseEdge      = 1;
+            m_BaseMagic     = 0;
+            m_BaseResonance = 0;
+
+            m_PainEditor      = false;
+            m_PainResistence  = 0;
+            m_SpellsSustained = 0;
+
             Skills = new ObservableCollection<ISkillViewModel>();
             Improvements = new ObservableCollection<IImprovementViewModel>();
+            Improvements.CollectionChanged += OnImprovementsChanged;
+            _bonusHandlers = Improvements.ToDictionary(
+                imp => imp,
+                imp => new BonusHandler(this, imp));
         }
 
         public CharacterViewModel(IRoller roller, ICharacter loader)
@@ -40,65 +73,50 @@ namespace ShadowrunTracker.ViewModels
 
             m_Essence = loader.Essence;
 
-            m_Body = loader.Body;
-            m_Agility = loader.Agility;
-            m_Reaction = loader.Reaction;
-            m_Strength = loader.Strength;
-            m_Charisma = loader.Charisma;
-            m_Intuition = loader.Intuition;
-            m_Logic = loader.Logic;
-            m_Willpower = loader.Willpower;
+            m_BaseBody      = loader.BaseBody;
+            m_BaseAgility   = loader.BaseAgility;
+            m_BaseReaction  = loader.BaseReaction;
+            m_BaseStrength  = loader.BaseStrength;
+            m_BaseCharisma  = loader.BaseCharisma;
+            m_BaseIntuition = loader.BaseIntuition;
+            m_BaseLogic     = loader.BaseLogic;
+            m_BaseWillpower = loader.BaseWillpower;
 
-            m_BonusBody = loader.BonusBody;
-            m_BonusAgility = loader.BonusAgility;
-            m_BonusReaction = loader.BonusReaction;
-            m_BonusStrength = loader.BonusStrength;
-            m_BonusCharisma = loader.BonusCharisma;
-            m_BonusIntuition = loader.BonusIntuition;
-            m_BonusLogic = loader.BonusLogic;
-            m_BonusWillpower = loader.BonusWillpower;
+            m_BaseEdge      = loader.Edge;
+            m_BaseMagic     = loader.Magic;
+            m_BaseResonance = loader.Resonance;
 
-            m_Edge = loader.Edge;
-            m_Magic = loader.Magic;
-            m_Resonance = loader.Resonance;
-
-            m_BonusEdge = loader.BonusEdge;
-            m_BonusMagic = loader.BonusMagic;
-            m_BonusResonance = loader.BonusResonance;
-
-            m_BonusPhysicalBoxes = loader.BonusPhysicalBoxes;
-
-            m_BonusStunBoxes = loader.BonusStunBoxes;
-
-            m_PainEditor = loader.PainEditor;
-            m_PainResistence = loader.PainResistence;
-
+            m_PainEditor      = loader.PainEditor;
+            m_PainResistence  = loader.PainResistence;
             m_SpellsSustained = loader.SpellsSustained;
 
-            m_BonusPhysicalInitiative = loader.BonusPhysicalInitiative;
-            m_BonusPhysicalInitiativeDice = loader.BonusPhysicalInitiativeDice;
+            Skills       = new ObservableCollection<ISkillViewModel>(loader.Skills.Select(s => (ISkillViewModel)new SkillViewModel(s)));
+            Improvements = new ObservableCollection<IImprovementViewModel>(loader.Improvements.Select(i => (IImprovementViewModel)new ImprovementViewModel(i)));
+            Improvements.CollectionChanged += OnImprovementsChanged;
+            _bonusHandlers = Improvements.ToDictionary(
+                imp => imp,
+                imp => new BonusHandler(this, imp));
+        }
 
-            m_BonusAstralInitiative = loader.BonusAstralInitiative;
-            m_BonusAstralInitiativeDice = loader.BonusAstralInitiativeDice;
-
-            m_BonusMatrixARInitiative = loader.BonusMatrixARInitiative;
-            m_BonusMatrixARInitiativeDice = loader.BonusMatrixARInitiativeDice;
-
-            m_BonusMatrixColdInitiative = loader.BonusMatrixColdInitiative;
-            m_BonusMatrixColdInitiativeDice = loader.BonusMatrixColdInitiativeDice;
-
-            m_BonusMatrixHotInitiative = loader.BonusMatrixHotInitiative;
-            m_BonusMatrixHotInitiativeDice = loader.BonusMatrixHotInitiativeDice;
-
-
-            m_BonusPhysicalLimit = loader.BonusPhysicalLimit;
-            m_BonusMentalLimit = loader.BonusMentalLimit;
-            m_BonusSocialLimit = loader.BonusSocialLimit;
-            m_BonusAstralLimit = loader.BonusAstralLimit;
-
-            Skills = new ObservableCollection<ISkillViewModel>(loader.Skills.Select(s => (ISkillViewModel)new SkillViewModel(s)));
-            Improvements = new ObservableCollection<IImprovementViewModel>();
-            //Improvements = new ObservableCollection<IImprovementViewModel>(loader.Improvements.Select(i => (IImprovementViewModel)new ImprovementViewModel(i)));
+        private void OnImprovementsChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.OldItems != null)
+            {
+                foreach (IImprovementViewModel item in e.OldItems)
+                {
+                    if (_bonusHandlers.Remove(item, out var handler))
+                    {
+                        handler.Dispose();
+                    }
+                }
+            }
+            if (e.NewItems != null)
+            {
+                foreach (IImprovementViewModel item in e.NewItems)
+                {
+                    _bonusHandlers.Add(item, new BonusHandler(this, item));
+                } 
+            }
         }
 
         #region Properties
@@ -107,148 +125,86 @@ namespace ShadowrunTracker.ViewModels
         public string Alias
         {
             get => m_Alias;
-            set => this.RaiseAndSetIfChanged(ref m_Alias, value);
+            set => this.SetAndRaiseIfChanged(ref m_Alias, value);
         }
 
         private bool m_IsPlayer = false;
         public bool IsPlayer
         {
             get => m_IsPlayer;
-            set => this.RaiseAndSetIfChanged(ref m_IsPlayer, value);
+            set => this.SetAndRaiseIfChanged(ref m_IsPlayer, value);
         }
 
         private string m_Player = string.Empty;
         public string Player
         {
             get => m_Player;
-            set => this.RaiseAndSetIfChanged(ref m_Player, value);
+            set => this.SetAndRaiseIfChanged(ref m_Player, value);
         }
 
         private decimal m_Essence = 6m;
         public decimal Essence
         {
             get => m_Essence;
-            set => this.RaiseAndSetIfChanged(ref m_Essence,
-                                             value,
-                                             nameof(Essence),
-                                             nameof(AugmentedSocialLimit));
+            set => this.SetAndRaiseIfChanged(ref m_Essence, value);
         }
 
         #region Attributes
 
-        private int m_Body;
-        public int Body
+        private int m_BaseBody;
+        public int BaseBody
         {
-            get => m_Body;
-            set => this.RaiseAndSetIfChanged(ref m_Body,
-                                             value,
-                                             nameof(Body),
-                                             nameof(AugmentedBody),
-                                             nameof(AugmentedPhysicalLimit),
-                                             nameof(AugmentedPhysicalBoxes),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(AugmentedAstralInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(AugmentedMatrixColdInitiative),
-                                             nameof(AugmentedMatrixHotInitiative),
-                                             nameof(CurrentInitiative));
+            get => m_BaseBody;
+            set => this.SetAndRaiseIfChanged(ref m_BaseBody, value);
         }
 
-        private int m_Agility;
-        public int Agility
+        private int m_BaseAgility;
+        public int BaseAgility
         {
-            get => m_Agility;
-            set => this.RaiseAndSetIfChanged(ref m_Agility,
-                                             value,
-                                             nameof(Agility),
-                                             nameof(AugmentedAgility));
+            get => m_BaseAgility;
+            set => this.SetAndRaiseIfChanged(ref m_BaseAgility, value);
         }
 
-        private int m_Reaction;
-        public int Reaction
+        private int m_BaseReaction;
+        public int BaseReaction
         {
-            get => m_Reaction;
-            set => this.RaiseAndSetIfChanged(ref m_Reaction,
-                                             value,
-                                             nameof(Reaction),
-                                             nameof(AugmentedReaction),
-                                             nameof(AugmentedPhysicalLimit),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(CurrentInitiative));
+            get => m_BaseReaction;
+            set => this.SetAndRaiseIfChanged(ref m_BaseReaction, value);
         }
 
-        private int m_Strength;
-        public int Strength
+        private int m_BaseStrength;
+        public int BaseStrength
         {
-            get => m_Strength;
-            set => this.RaiseAndSetIfChanged(ref m_Strength,
-                                             value,
-                                             nameof(Strength),
-                                             nameof(AugmentedStrength),
-                                             nameof(AugmentedPhysicalLimit));
+            get => m_BaseStrength;
+            set => this.SetAndRaiseIfChanged(ref m_BaseStrength, value);
         }
 
-        private int m_Charisma;
-        public int Charisma
+        private int m_BaseCharisma;
+        public int BaseCharisma
         {
-            get => m_Charisma;
-            set => this.RaiseAndSetIfChanged(ref m_Charisma,
-                                             value,
-                                             nameof(Charisma),
-                                             nameof(AugmentedCharisma),
-                                             nameof(AugmentedSocialLimit));
+            get => m_BaseCharisma;
+            set => this.SetAndRaiseIfChanged(ref m_BaseCharisma, value);
         }
 
-        private int m_Intuition;
-        public int Intuition
+        private int m_BaseIntuition;
+        public int BaseIntuition
         {
-            get => m_Intuition;
-            set => this.RaiseAndSetIfChanged(ref m_Intuition,
-                                             value,
-                                             nameof(Intuition),
-                                             nameof(AugmentedIntuition),
-                                             nameof(AugmentedMentalLimit),
-                                             nameof(AugmentedAstralLimit),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(AugmentedAstralInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(AugmentedMatrixColdInitiative),
-                                             nameof(AugmentedMatrixHotInitiative),
-                                             nameof(CurrentInitiative));
+            get => m_BaseIntuition;
+            set => this.SetAndRaiseIfChanged(ref m_BaseIntuition, value);
         }
 
-        private int m_Logic;
-        public int Logic
+        private int m_BaseLogic;
+        public int BaseLogic
         {
-            get => m_Logic;
-            set => this.RaiseAndSetIfChanged(ref m_Logic,
-                                             value,
-                                             nameof(Logic),
-                                             nameof(AugmentedLogic),
-                                             nameof(AugmentedMentalLimit));
+            get => m_BaseLogic;
+            set => this.SetAndRaiseIfChanged(ref m_BaseLogic, value);
         }
 
-        private int m_Willpower;
-        public int Willpower
+        private int m_BaseWillpower;
+        public int BaseWillpower
         {
-            get => m_Willpower;
-            set => this.RaiseAndSetIfChanged(ref m_Willpower,
-                                             value,
-                                             nameof(Willpower),
-                                             nameof(AugmentedWillpower),
-                                             nameof(AugmentedStunBoxes),
-                                             nameof(AugmentedMentalLimit),
-                                             nameof(AugmentedSocialLimit),
-                                             nameof(AugmentedAstralLimit),
-                                             nameof(WoundModifier),
-                                             nameof(TotalPenalty),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(AugmentedAstralInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(AugmentedMatrixColdInitiative),
-                                             nameof(AugmentedMatrixHotInitiative),
-                                             nameof(CurrentInitiative));
+            get => m_BaseWillpower;
+            set => this.SetAndRaiseIfChanged(ref m_BaseWillpower, value);
         }
 
 
@@ -256,159 +212,113 @@ namespace ShadowrunTracker.ViewModels
         public int BonusBody
         {
             get => m_BonusBody;
-            set => this.RaiseAndSetIfChanged(ref m_BonusBody,
-                                             value,
-                                             nameof(BonusBody),
-                                             nameof(AugmentedBody),
-                                             nameof(AugmentedPhysicalLimit),
-                                             nameof(AugmentedPhysicalBoxes),
-                                             nameof(WoundModifier),
-                                             nameof(TotalPenalty),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(AugmentedAstralInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(AugmentedMatrixColdInitiative),
-                                             nameof(AugmentedMatrixHotInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_BonusBody, value);
         }
 
         private int m_BonusAgility;
         public int BonusAgility
         {
             get => m_BonusAgility;
-            set => this.RaiseAndSetIfChanged(ref m_BonusAgility,
-                                             value,
-                                             nameof(BonusAgility),
-                                             nameof(AugmentedAgility));
+            set => this.SetAndRaiseIfChanged(ref m_BonusAgility, value);
         }
 
         private int m_BonusReaction;
         public int BonusReaction
         {
             get => m_BonusReaction;
-            set => this.RaiseAndSetIfChanged(ref m_BonusReaction,
-                                             value,
-                                             nameof(BonusReaction),
-                                             nameof(AugmentedReaction),
-                                             nameof(AugmentedPhysicalLimit),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_BonusReaction, value);
         }
 
         private int m_BonusStrength;
         public int BonusStrength
         {
             get => m_BonusStrength;
-            set => this.RaiseAndSetIfChanged(ref m_BonusStrength,
-                                             value,
-                                             nameof(BonusStrength),
-                                             nameof(AugmentedStrength),
-                                             nameof(AugmentedPhysicalLimit));
+            set => this.SetAndRaiseIfChanged(ref m_BonusStrength, value);
         }
 
         private int m_BonusCharisma;
         public int BonusCharisma
         {
             get => m_BonusCharisma;
-            set => this.RaiseAndSetIfChanged(ref m_BonusCharisma,
-                                             value,
-                                             nameof(BonusCharisma),
-                                             nameof(AugmentedCharisma),
-                                             nameof(AugmentedSocialLimit));
+            set => this.SetAndRaiseIfChanged(ref m_BonusCharisma, value);
         }
 
         private int m_BonusIntuition;
         public int BonusIntuition
         {
             get => m_BonusIntuition;
-            set => this.RaiseAndSetIfChanged(ref m_BonusIntuition,
-                                             value,
-                                             nameof(BonusIntuition),
-                                             nameof(AugmentedIntuition),
-                                             nameof(AugmentedMentalLimit),
-                                             nameof(AugmentedAstralLimit),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(AugmentedAstralInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(AugmentedMatrixColdInitiative),
-                                             nameof(AugmentedMatrixHotInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_BonusIntuition, value);
         }
 
         private int m_BonusLogic;
         public int BonusLogic
         {
             get => m_BonusLogic;
-            set => this.RaiseAndSetIfChanged(ref m_BonusLogic,
-                                             value,
-                                             nameof(BonusLogic),
-                                             nameof(AugmentedLogic),
-                                             nameof(AugmentedMentalLimit));
+            set => this.SetAndRaiseIfChanged(ref m_BonusLogic, value);
         }
 
         private int m_BonusWillpower;
         public int BonusWillpower
         {
             get => m_BonusWillpower;
-            set => this.RaiseAndSetIfChanged(ref m_BonusWillpower,
-                                             value,
-                                             nameof(BonusWillpower),
-                                             nameof(AugmentedWillpower),
-                                             nameof(AugmentedStunBoxes),
-                                             nameof(AugmentedMentalLimit),
-                                             nameof(AugmentedSocialLimit),
-                                             nameof(AugmentedAstralLimit),
-                                             nameof(WoundModifier),
-                                             nameof(TotalPenalty),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(AugmentedAstralInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(AugmentedMatrixColdInitiative),
-                                             nameof(AugmentedMatrixHotInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_BonusWillpower, value);
         }
 
-        public int AugmentedBody => m_Body + m_BonusBody;
+        [DependsOn(nameof(BaseBody))]
+        [DependsOn(nameof(BonusBody))]
+        public int Body => m_BaseBody + m_BonusBody;
 
-        public int AugmentedAgility => m_Agility + m_BonusAgility;
+        [DependsOn(nameof(BaseAgility))]
+        [DependsOn(nameof(BonusAgility))]
+        public int Agility => m_BaseAgility + m_BonusAgility;
 
-        public int AugmentedReaction => m_Reaction + m_BonusReaction;
+        [DependsOn(nameof(BaseReaction))]
+        [DependsOn(nameof(BonusReaction))]
+        public int Reaction => m_BaseReaction + m_BonusReaction;
 
-        public int AugmentedStrength => m_Strength + m_BonusStrength;
+        [DependsOn(nameof(BaseStrength))]
+        [DependsOn(nameof(BonusStrength))]
+        public int Strength => m_BaseStrength + m_BonusStrength;
 
-        public int AugmentedCharisma => m_Charisma + m_BonusCharisma;
+        [DependsOn(nameof(BaseWillpower))]
+        [DependsOn(nameof(BonusWillpower))]
+        public int Willpower => m_BaseWillpower + m_BonusWillpower;
 
-        public int AugmentedIntuition => m_Intuition + m_BonusIntuition;
+        [DependsOn(nameof(BaseIntuition))]
+        [DependsOn(nameof(BonusIntuition))]
+        public int Intuition => m_BaseIntuition + m_BonusIntuition;
 
-        public int AugmentedLogic => m_Logic + m_BonusLogic;
+        [DependsOn(nameof(BaseLogic))]
+        [DependsOn(nameof(BonusLogic))]
+        public int Logic => m_BaseLogic + m_BonusLogic;
 
-        public int AugmentedWillpower => m_Willpower + m_BonusWillpower;
-
+        [DependsOn(nameof(BaseCharisma))]
+        [DependsOn(nameof(BonusCharisma))]
+        public int Charisma => m_BaseCharisma + m_BonusCharisma;
 
         #endregion
 
         #region Special Attributes
 
-        private int m_Edge;
-        public int Edge
+        private int m_BaseEdge;
+        public int BaseEdge
         {
-            get => m_Edge;
-            set => this.RaiseAndSetIfChanged(ref m_Edge, value);
+            get => m_BaseEdge;
+            set => this.SetAndRaiseIfChanged(ref m_BaseEdge, value);
         }
 
-        private int m_Magic;
-        public int Magic
+        private int m_BaseMagic;
+        public int BaseMagic
         {
-            get => m_Magic;
-            set => this.RaiseAndSetIfChanged(ref m_Magic, value);
+            get => m_BaseMagic;
+            set => this.SetAndRaiseIfChanged(ref m_BaseMagic, value);
         }
 
-        private int m_Resonance;
-        public int Resonance
+        private int m_BaseResonance;
+        public int BaseResonance
         {
-            get => m_Resonance;
-            set => this.RaiseAndSetIfChanged(ref m_Resonance, value);
+            get => m_BaseResonance;
+            set => this.SetAndRaiseIfChanged(ref m_BaseResonance, value);
         }
 
 
@@ -416,29 +326,46 @@ namespace ShadowrunTracker.ViewModels
         public int BonusEdge
         {
             get => m_BonusEdge;
-            set => this.RaiseAndSetIfChanged(ref m_BonusEdge, value, nameof(BonusEdge), nameof(AugmentedEdge));
+            set => this.SetAndRaiseIfChanged(ref m_BonusEdge, value);
         }
 
         private int m_BonusMagic;
         public int BonusMagic
         {
             get => m_BonusMagic;
-            set => this.RaiseAndSetIfChanged(ref m_BonusMagic, value, nameof(BonusMagic), nameof(AugmentedMagic));
+            set => this.SetAndRaiseIfChanged(ref m_BonusMagic, value);
         }
 
         private int m_BonusResonance;
         public int BonusResonance
         {
             get => m_BonusResonance;
-            set => this.RaiseAndSetIfChanged(ref m_BonusResonance, value, nameof(BonusResonance), nameof(AugmentedResonance));
+            set => this.SetAndRaiseIfChanged(ref m_BonusResonance, value);
         }
 
+        [DependsOn(nameof(BaseEdge))]
+        [DependsOn(nameof(BonusEdge))]
+        public int Edge => m_BaseEdge + m_BonusEdge;
 
-        public int AugmentedEdge => m_Edge + m_BonusEdge;
+        [DependsOn(nameof(BaseMagic))]
+        [DependsOn(nameof(BonusMagic))]
+        public int Magic => m_BaseMagic + m_BonusMagic;
 
-        public int AugmentedMagic => m_Magic + m_BonusMagic;
+        [DependsOn(nameof(BaseResonance))]
+        [DependsOn(nameof(BonusResonance))]
+        public int Resonance => m_BaseResonance + m_BonusResonance;
 
-        public int AugmentedResonance => m_Resonance + m_BonusResonance;
+        private int m_EdgePoints;
+        public int EdgePoints
+        {
+            get => m_EdgePoints;
+            set => this.SetAndRaiseIfChanged(ref m_EdgePoints, value);
+        }
+
+        #endregion
+
+        #region Matrix Attributes
+
 
         #endregion
 
@@ -448,110 +375,56 @@ namespace ShadowrunTracker.ViewModels
         public int BonusPhysicalBoxes
         {
             get => m_BonusPhysicalBoxes;
-            set => this.RaiseAndSetIfChanged(ref m_BonusPhysicalBoxes,
-                                             value,
-                                             nameof(BonusPhysicalBoxes),
-                                             nameof(AugmentedPhysicalBoxes),
-                                             nameof(WoundModifier),
-                                             nameof(TotalPenalty),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(AugmentedAstralInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(AugmentedMatrixColdInitiative),
-                                             nameof(AugmentedMatrixHotInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_BonusPhysicalBoxes, value);
         }
 
-        public int AugmentedPhysicalBoxes => DamageTrackBase + Convert.ToInt32(Math.Ceiling(AugmentedBody / 2f)) + m_BonusPhysicalBoxes;
+        [DependsOn(nameof(Body))]
+        [DependsOn(nameof(BonusPhysicalBoxes))]
+        public int PhysicalBoxes => DamageTrackBase + Convert.ToInt32(Math.Ceiling(Body / 2f)) + m_BonusPhysicalBoxes;
 
         private int m_PhysicalDamage;
         public int PhysicalDamage
         {
             get => m_PhysicalDamage;
-            set => this.RaiseAndSetIfChanged(ref m_PhysicalDamage,
-                                             value,
-                                             nameof(PhysicalDamage),
-                                             nameof(WoundModifier),
-                                             nameof(TotalPenalty),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(AugmentedAstralInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(AugmentedMatrixColdInitiative),
-                                             nameof(AugmentedMatrixHotInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_PhysicalDamage, value);
         }
 
         private int m_BonusStunBoxes;
         public int BonusStunBoxes
         {
             get => m_BonusStunBoxes;
-            set => this.RaiseAndSetIfChanged(ref m_BonusStunBoxes,
-                                             value,
-                                             nameof(BonusStunBoxes),
-                                             nameof(AugmentedStunBoxes),
-                                             nameof(WoundModifier),
-                                             nameof(TotalPenalty),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(AugmentedAstralInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(AugmentedMatrixColdInitiative),
-                                             nameof(AugmentedMatrixHotInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_BonusStunBoxes, value);
         }
 
-        public int AugmentedStunBoxes => DamageTrackBase + Convert.ToInt32(Math.Ceiling(AugmentedWillpower / 2f)) + m_BonusStunBoxes;
+        [DependsOn(nameof(Willpower))]
+        [DependsOn(nameof(BonusStunBoxes))]
+        public int StunBoxes => DamageTrackBase + Convert.ToInt32(Math.Ceiling(Willpower / 2f)) + m_BonusStunBoxes;
 
         private int m_StunDamage;
         public int StunDamage
         {
             get => m_StunDamage;
-            set => this.RaiseAndSetIfChanged(ref m_StunDamage,
-                                             value,
-                                             nameof(StunDamage),
-                                             nameof(WoundModifier),
-                                             nameof(TotalPenalty),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(AugmentedAstralInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(AugmentedMatrixColdInitiative),
-                                             nameof(AugmentedMatrixHotInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_StunDamage, value);
         }
 
         private bool m_PainEditor;
         public bool PainEditor
         {
             get => m_PainEditor;
-            set => this.RaiseAndSetIfChanged(ref m_PainEditor,
-                                             value,
-                                             nameof(PainEditor),
-                                             nameof(WoundModifier),
-                                             nameof(TotalPenalty),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(AugmentedAstralInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(AugmentedMatrixColdInitiative),
-                                             nameof(AugmentedMatrixHotInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_PainEditor, value);
         }
 
         private int m_PainResistence;
         public int PainResistence
         {
             get => m_PainResistence;
-            set => this.RaiseAndSetIfChanged(ref m_PainResistence,
-                                             value,
-                                             nameof(PainResistence),
-                                             nameof(WoundModifier),
-                                             nameof(TotalPenalty),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(AugmentedAstralInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(AugmentedMatrixColdInitiative),
-                                             nameof(AugmentedMatrixHotInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_PainResistence, value);
         }
 
+        [DependsOn(nameof(PhysicalDamage))]
+        [DependsOn(nameof(StunDamage))]
+        [DependsOn(nameof(PainEditor))]
+        [DependsOn(nameof(PainResistence))]
         public int WoundModifier => m_PainEditor
             ? 0
             : -(m_PhysicalDamage - m_PainResistence) / DamageTrackRow - (m_StunDamage - m_PainResistence) / DamageTrackRow;
@@ -561,18 +434,11 @@ namespace ShadowrunTracker.ViewModels
         public int SpellsSustained
         {
             get => m_SpellsSustained;
-            set => this.RaiseAndSetIfChanged(ref m_SpellsSustained,
-                                             value,
-                                             nameof(SpellsSustained),
-                                             nameof(TotalPenalty),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(AugmentedAstralInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(AugmentedMatrixColdInitiative),
-                                             nameof(AugmentedMatrixHotInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_SpellsSustained, value);
         }
 
+        [DependsOn(nameof(WoundModifier))]
+        [DependsOn(nameof(SpellsSustained))]
         public int TotalPenalty => WoundModifier + SpellsSustained * PenaltyPerSpell;
 
         #endregion
@@ -583,134 +449,111 @@ namespace ShadowrunTracker.ViewModels
         public int BonusPhysicalInitiative
         {
             get => m_BonusPhysicalInitiative;
-            set => this.RaiseAndSetIfChanged(ref m_BonusPhysicalInitiative,
-                                             value,
-                                             nameof(BonusPhysicalInitiative),
-                                             nameof(AugmentedPhysicalInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_BonusPhysicalInitiative, value);
         }
 
         private int m_BonusPhysicalInitiativeDice;
         public int BonusPhysicalInitiativeDice
         {
             get => m_BonusPhysicalInitiativeDice;
-            set => this.RaiseAndSetIfChanged(ref m_BonusPhysicalInitiativeDice,
-                                             value,
-                                             nameof(BonusPhysicalInitiativeDice),
-                                             nameof(AugmentedPhysicalInitiativeDice),
-                                             nameof(CurrentInitiativeDice));
+            set => this.SetAndRaiseIfChanged(ref m_BonusPhysicalInitiativeDice, value);
         }
 
-        public int AugmentedPhysicalInitiative => AugmentedReaction + AugmentedIntuition + m_BonusPhysicalInitiative + TotalPenalty;
+        [DependsOn(nameof(Reaction))]
+        [DependsOn(nameof(Intuition))]
+        [DependsOn(nameof(BonusPhysicalInitiative))]
+        public int PhysicalInitiative => Reaction + Intuition + m_BonusPhysicalInitiative + TotalPenalty;
 
-        public int AugmentedPhysicalInitiativeDice => BasePhysicalInitiativeDice + m_BonusPhysicalInitiativeDice;
+        [DependsOn(nameof(BonusPhysicalInitiativeDice))]
+        public int PhysicalInitiativeDice => BasePhysicalInitiativeDice + m_BonusPhysicalInitiativeDice;
 
 
         private int m_BonusAstralInitiative;
         public int BonusAstralInitiative
         {
             get => m_BonusAstralInitiative;
-            set => this.RaiseAndSetIfChanged(ref m_BonusAstralInitiative,
-                                             value,
-                                             nameof(BonusAstralInitiative),
-                                             nameof(AugmentedAstralInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_BonusAstralInitiative, value);
         }
 
         private int m_BonusAstralInitiativeDice;
         public int BonusAstralInitiativeDice
         {
             get => m_BonusAstralInitiativeDice;
-            set => this.RaiseAndSetIfChanged(ref m_BonusAstralInitiativeDice,
-                                             value,
-                                             nameof(BonusAstralInitiativeDice),
-                                             nameof(AugmentedAstralInitiativeDice),
-                                             nameof(CurrentInitiativeDice));
+            set => this.SetAndRaiseIfChanged(ref m_BonusAstralInitiativeDice, value);
         }
 
-        public int AugmentedAstralInitiative => AugmentedIntuition * 2 + BonusAstralInitiative + TotalPenalty;
-        public int AugmentedAstralInitiativeDice => BaseAstralInitiativeDice + m_BonusAstralInitiativeDice;
+        [DependsOn(nameof(Intuition))]
+        [DependsOn(nameof(BonusAstralInitiative))]
+        public int AstralInitiative => Intuition * 2 + BonusAstralInitiative + TotalPenalty;
+
+        [DependsOn(nameof(BonusAstralInitiativeDice))]
+        public int AstralInitiativeDice => BaseAstralInitiativeDice + m_BonusAstralInitiativeDice;
 
 
         private int m_BonusMatrixARInitiative;
         public int BonusMatrixARInitiative
         {
             get => m_BonusMatrixARInitiative;
-            set => this.RaiseAndSetIfChanged(ref m_BonusMatrixARInitiative,
-                                             value,
-                                             nameof(BonusMatrixARInitiative),
-                                             nameof(AugmentedMatrixARInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_BonusMatrixARInitiative, value);
         }
 
         private int m_BonusMatrixARInitiativeDice;
         public int BonusMatrixARInitiativeDice
         {
             get => m_BonusMatrixARInitiativeDice;
-            set => this.RaiseAndSetIfChanged(ref m_BonusMatrixARInitiativeDice,
-                                             value,
-                                             nameof(BonusMatrixARInitiativeDice),
-                                             nameof(AugmentedMatrixARInitiativeDice),
-                                             nameof(CurrentInitiativeDice));
+            set => this.SetAndRaiseIfChanged(ref m_BonusMatrixARInitiativeDice, value);
         }
 
-        public int AugmentedMatrixARInitiative => AugmentedPhysicalInitiative + m_BonusMatrixARInitiative; // Penalty already applied to Physical Initiative
+        [DependsOn(nameof(PhysicalInitiative))]
+        [DependsOn(nameof(BonusMatrixARInitiative))]
+        public int MatrixARInitiative => PhysicalInitiative + m_BonusMatrixARInitiative; // Penalty already applied to Physical Initiative
 
-        public int AugmentedMatrixARInitiativeDice => AugmentedPhysicalInitiativeDice + m_BonusMatrixARInitiativeDice;
+        [DependsOn(nameof(BonusMatrixARInitiativeDice))]
+        public int MatrixARInitiativeDice => PhysicalInitiativeDice + m_BonusMatrixARInitiativeDice;
 
 
         private int m_BonusMatrixColdInitiative;
         public int BonusMatrixColdInitiative
         {
             get => m_BonusMatrixColdInitiative;
-            set => this.RaiseAndSetIfChanged(ref m_BonusMatrixColdInitiative,
-                                             value,
-                                             nameof(BonusMatrixColdInitiative),
-                                             nameof(AugmentedMatrixColdInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_BonusMatrixColdInitiative, value);
         }
 
         private int m_BonusMatrixColdInitiativeDice;
         public int BonusMatrixColdInitiativeDice
         {
             get => m_BonusMatrixColdInitiativeDice;
-            set => this.RaiseAndSetIfChanged(ref m_BonusMatrixColdInitiativeDice,
-                                             value,
-                                             nameof(BonusMatrixColdInitiativeDice),
-                                             nameof(AugmentedMatrixColdInitiativeDice),
-                                             nameof(CurrentInitiativeDice));
+            set => this.SetAndRaiseIfChanged(ref m_BonusMatrixColdInitiativeDice, value);
         }
 
-        public int AugmentedMatrixColdInitiative => AugmentedIntuition + m_BonusMatrixColdInitiative + TotalPenalty;
+        [DependsOn(nameof(Intuition))]
+        [DependsOn(nameof(BonusMatrixColdInitiative))]
+        public int MatrixColdInitiative => Intuition + m_BonusMatrixColdInitiative + TotalPenalty;
 
-        public int AugmentedMatrixColdInitiativeDice => BaseMatrixColdInitiativeDice + m_BonusMatrixColdInitiativeDice;
+        [DependsOn(nameof(BonusMatrixColdInitiativeDice))]
+        public int MatrixColdInitiativeDice => BaseMatrixColdInitiativeDice + m_BonusMatrixColdInitiativeDice;
 
 
         private int m_BonusMatrixHotInitiative;
         public int BonusMatrixHotInitiative
         {
             get => m_BonusMatrixHotInitiative;
-            set => this.RaiseAndSetIfChanged(ref m_BonusMatrixHotInitiative,
-                                             value,
-                                             nameof(BonusMatrixHotInitiative),
-                                             nameof(AugmentedMatrixHotInitiative),
-                                             nameof(CurrentInitiative));
+            set => this.SetAndRaiseIfChanged(ref m_BonusMatrixHotInitiative, value);
         }
 
         private int m_BonusMatrixHotInitiativeDice;
         public int BonusMatrixHotInitiativeDice
         {
             get => m_BonusMatrixHotInitiativeDice;
-            set => this.RaiseAndSetIfChanged(ref m_BonusMatrixHotInitiativeDice,
-                                             value,
-                                             nameof(BonusMatrixHotInitiativeDice),
-                                             nameof(AugmentedMatrixHotInitiativeDice),
-                                             nameof(CurrentInitiativeDice));
+            set => this.SetAndRaiseIfChanged(ref m_BonusMatrixHotInitiativeDice, value);
         }
 
-        public int AugmentedMatrixHotInitiative => AugmentedIntuition + m_BonusMatrixHotInitiative + TotalPenalty;
+        [DependsOn(nameof(Intuition))]
+        [DependsOn(nameof(BonusMatrixHotInitiative))]
+        public int MatrixHotInitiative => Intuition + m_BonusMatrixHotInitiative + TotalPenalty;
 
-        public int AugmentedMatrixHotInitiativeDice => BaseMatrixHotInitiativeDice + m_BonusMatrixHotInitiativeDice;
+        [DependsOn(nameof(BonusMatrixHotInitiativeDice))]
+        public int MatrixHotInitiativeDice => BaseMatrixHotInitiativeDice + m_BonusMatrixHotInitiativeDice;
 
         private InitiativeState m_CurrentState;
         public InitiativeState CurrentState
@@ -718,33 +561,41 @@ namespace ShadowrunTracker.ViewModels
             get => m_CurrentState;
             set
             {
-                this.RaiseAndSetIfChanged(ref m_CurrentState,
-                                          value,
-                                          nameof(CurrentState),
-                                          nameof(CurrentInitiative),
-                                          nameof(CurrentInitiativeDice));
+                this.SetAndRaiseIfChanged(ref m_CurrentState, value);
             }
         }
 
+        [DependsOn(nameof(CurrentState))]
+        [DependsOn(nameof(PhysicalInitiative))]
+        [DependsOn(nameof(AstralInitiative))]
+        [DependsOn(nameof(MatrixARInitiative))]
+        [DependsOn(nameof(MatrixColdInitiative))]
+        [DependsOn(nameof(MatrixHotInitiative))]
         public int CurrentInitiative =>
             CurrentState switch
             {
-                InitiativeState.Physical => AugmentedPhysicalInitiative,
-                InitiativeState.Astral => AugmentedAstralInitiative,
-                InitiativeState.MatrixAR => AugmentedMatrixARInitiative,
-                InitiativeState.MatrixCold => AugmentedMatrixColdInitiative,
-                InitiativeState.MatrixHot => AugmentedMatrixHotInitiative,
+                InitiativeState.Physical => PhysicalInitiative,
+                InitiativeState.Astral => AstralInitiative,
+                InitiativeState.MatrixAR => MatrixARInitiative,
+                InitiativeState.MatrixCold => MatrixColdInitiative,
+                InitiativeState.MatrixHot => MatrixHotInitiative,
                 _ => 0
             };
 
+        [DependsOn(nameof(CurrentState))]
+        [DependsOn(nameof(PhysicalInitiativeDice))]
+        [DependsOn(nameof(AstralInitiativeDice))]
+        [DependsOn(nameof(MatrixARInitiativeDice))]
+        [DependsOn(nameof(MatrixColdInitiativeDice))]
+        [DependsOn(nameof(MatrixHotInitiativeDice))]
         public int CurrentInitiativeDice =>
             CurrentState switch
             {
-                InitiativeState.Physical => AugmentedPhysicalInitiativeDice,
-                InitiativeState.Astral => AugmentedAstralInitiativeDice,
-                InitiativeState.MatrixAR => AugmentedMatrixARInitiativeDice,
-                InitiativeState.MatrixCold => AugmentedMatrixColdInitiativeDice,
-                InitiativeState.MatrixHot => AugmentedMatrixHotInitiativeDice,
+                InitiativeState.Physical => PhysicalInitiativeDice,
+                InitiativeState.Astral => AstralInitiativeDice,
+                InitiativeState.MatrixAR => MatrixARInitiativeDice,
+                InitiativeState.MatrixCold => MatrixColdInitiativeDice,
+                InitiativeState.MatrixHot => MatrixHotInitiativeDice,
                 _ => 0
             };
 
@@ -756,38 +607,53 @@ namespace ShadowrunTracker.ViewModels
         public int BonusPhysicalLimit
         {
             get => m_BonusPhysicalLimit;
-            set => this.RaiseAndSetIfChanged(ref m_BonusPhysicalLimit, value, nameof(BonusPhysicalLimit), nameof(AugmentedPhysicalLimit));
+            set => this.SetAndRaiseIfChanged(ref m_BonusPhysicalLimit, value);
         }
 
-        public int AugmentedPhysicalLimit => Convert.ToInt32(Math.Ceiling((AugmentedStrength * 2.0 + AugmentedBody + AugmentedReaction) / 3.0)) + m_BonusPhysicalLimit;
+        [DependsOn(nameof(Strength))]
+        [DependsOn(nameof(Body))]
+        [DependsOn(nameof(Reaction))]
+        [DependsOn(nameof(BonusPhysicalLimit))]
+        public int PhysicalLimit => Convert.ToInt32(Math.Ceiling((Strength * 2.0 + Body + Reaction) / 3.0)) + m_BonusPhysicalLimit;
 
 
         private int m_BonusMentalLimit;
         public int BonusMentalLimit
         {
             get => m_BonusMentalLimit;
-            set => this.RaiseAndSetIfChanged(ref m_BonusMentalLimit, value, nameof(BonusMentalLimit), nameof(AugmentedMentalLimit));
+            set => this.SetAndRaiseIfChanged(ref m_BonusMentalLimit, value);
         }
 
-        public int AugmentedMentalLimit => Convert.ToInt32(Math.Ceiling((AugmentedLogic * 2.0 + AugmentedIntuition + AugmentedWillpower) / 3.0)) + m_BonusMentalLimit;
+        [DependsOn(nameof(Logic))]
+        [DependsOn(nameof(Intuition))]
+        [DependsOn(nameof(Willpower))]
+        [DependsOn(nameof(BonusMentalLimit))]
+        public int MentalLimit => Convert.ToInt32(Math.Ceiling((Logic * 2.0 + Intuition + Willpower) / 3.0)) + m_BonusMentalLimit;
 
         private int m_BonusSocialLimit;
         public int BonusSocialLimit
         {
             get => m_BonusSocialLimit;
-            set => this.RaiseAndSetIfChanged(ref m_BonusSocialLimit, value, nameof(BonusSocialLimit), nameof(AugmentedSocialLimit));
+            set => this.SetAndRaiseIfChanged(ref m_BonusSocialLimit, value);
         }
 
-        public int AugmentedSocialLimit => Convert.ToInt32(Math.Ceiling((AugmentedCharisma * 2.0 + AugmentedWillpower + Math.Ceiling(Convert.ToDouble(Essence))) / 3.0)) + m_BonusMentalLimit;
+        [DependsOn(nameof(Charisma))]
+        [DependsOn(nameof(Willpower))]
+        [DependsOn(nameof(Essence))]
+        [DependsOn(nameof(BonusSocialLimit))]
+        public int SocialLimit => Convert.ToInt32(Math.Ceiling((Charisma * 2.0 + Willpower + Math.Ceiling(Convert.ToDouble(Essence))) / 3.0)) + m_BonusMentalLimit;
 
         private int m_BonusAstralLimit;
         public int BonusAstralLimit
         {
             get => m_BonusAstralLimit;
-            set => this.RaiseAndSetIfChanged(ref m_BonusAstralLimit, value, nameof(BonusAstralLimit), nameof(AugmentedAstralLimit));
+            set => this.SetAndRaiseIfChanged(ref m_BonusAstralLimit, value);
         }
 
-        public int AugmentedAstralLimit => Math.Max(AugmentedMentalLimit, AugmentedSocialLimit) + m_BonusAstralLimit;
+        [DependsOn(nameof(BonusAstralLimit))]
+        [DependsOn(nameof(MentalLimit))]
+        [DependsOn(nameof(SocialLimit))]
+        public int AstralLimit => Math.Max(MentalLimit, SocialLimit) + m_BonusAstralLimit;
 
         #endregion
 
@@ -817,24 +683,24 @@ namespace ShadowrunTracker.ViewModels
             switch (CurrentState)
             {
                 case InitiativeState.Physical:
-                    roll.DiceUsed = AugmentedPhysicalInitiativeDice;
-                    roll.ScoreUsed = AugmentedPhysicalInitiative;
+                    roll.DiceUsed = PhysicalInitiativeDice;
+                    roll.ScoreUsed = PhysicalInitiative;
                     break;
                 case InitiativeState.Astral:
-                    roll.DiceUsed = AugmentedAstralInitiativeDice;
-                    roll.ScoreUsed = AugmentedAstralInitiative;
+                    roll.DiceUsed = AstralInitiativeDice;
+                    roll.ScoreUsed = AstralInitiative;
                     break;
                 case InitiativeState.MatrixAR:
-                    roll.DiceUsed = AugmentedMatrixARInitiativeDice;
-                    roll.ScoreUsed = AugmentedMatrixARInitiative;
+                    roll.DiceUsed = MatrixARInitiativeDice;
+                    roll.ScoreUsed = MatrixARInitiative;
                     break;
                 case InitiativeState.MatrixCold:
-                    roll.DiceUsed = AugmentedMatrixColdInitiativeDice;
-                    roll.ScoreUsed = AugmentedMatrixColdInitiative;
+                    roll.DiceUsed = MatrixColdInitiativeDice;
+                    roll.ScoreUsed = MatrixColdInitiative;
                     break;
                 case InitiativeState.MatrixHot:
-                    roll.DiceUsed = AugmentedMatrixHotInitiativeDice;
-                    roll.ScoreUsed = AugmentedMatrixHotInitiative;
+                    roll.DiceUsed = MatrixHotInitiativeDice;
+                    roll.ScoreUsed = MatrixHotInitiative;
                     break;
                 default:
                     return roll;
@@ -858,10 +724,10 @@ namespace ShadowrunTracker.ViewModels
             }
 
             var total = StunDamage + damage;
-            if (total > AugmentedStunBoxes)
+            if (total > StunBoxes)
             {
-                StunDamage = AugmentedStunBoxes;
-                ApplyPhysicalDamage(total - AugmentedStunBoxes);
+                StunDamage = StunBoxes;
+                ApplyPhysicalDamage(total - StunBoxes);
             }
             else
             {

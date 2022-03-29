@@ -1,9 +1,9 @@
-﻿using ShadowrunTracker.Contract.Model;
+﻿using ShadowrunTracker.Model;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ShadowrunTracker.Contract.ViewModels
+namespace ShadowrunTracker.ViewModels
 {
     /// <summary>
     /// Represents a singe effect of an event on a character.

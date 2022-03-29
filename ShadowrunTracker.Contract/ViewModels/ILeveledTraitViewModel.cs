@@ -1,11 +1,11 @@
-﻿namespace ShadowrunTracker.Contract.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
     public interface ILeveledTraitViewModel : ITraitViewModel
     {
-        int Rating { get; set; }
+        int BaseRating { get; set; }
 
         int BonusRating { get; set; }
 
-        int AugmentedRating { get; set; }
+        int AugmentedRating { get; }
     }
 }

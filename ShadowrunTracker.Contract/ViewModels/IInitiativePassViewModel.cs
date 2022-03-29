@@ -1,6 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 
-namespace ShadowrunTracker.Contract.ViewModels
+namespace ShadowrunTracker.ViewModels
 {
     public interface IInitiativePassViewModel : IViewModel 
     {
@@ -36,15 +37,8 @@ namespace ShadowrunTracker.Contract.ViewModels
         void Next();
 
         /// <summary>
-        /// Apply damage to a participant
+        /// Fired when the initiative pass is complete.
         /// </summary>
-        /// <param name="participantInitiativeViewModel"></param>
-        void ApplyDamage(IParticipantInitiativeViewModel participantInitiativeViewModel);
-
-        /// <summary>
-        /// Apply Healing to a participant
-        /// </summary>
-        /// <param name="participantInitiativeViewModel"></param>
-        void ApplyHealing(IParticipantInitiativeViewModel participantInitiativeViewModel);
+        event EventHandler<EventArgs> OnCompleted;
     }
 }
