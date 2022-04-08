@@ -24,6 +24,7 @@
 - Save/load characters
 - Save/load encounters
 - Import character from Chummer5
+- Port UI to .NET MAUI and support more OSs.
 
 ## Supported Platforms
 
