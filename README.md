@@ -24,3 +24,16 @@
 - Save/load characters
 - Save/load encounters
 - Import character from Chummer5
+
+## Supported Platforms
+
+Windows 10+
+
+## Building
+Requirements:
+- Microsoft Visual Studio 2022 (on Windows)
+  - With at least _Desktop Development_ componetns selected.
+
+_All third party packages used are available on nuget._
+
+It's aslo possible to build it using the `dotnet` command line, which is what CI will use once/if I get that set up.
