@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShadowrunTracker.Utils", "S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShadowrunTracker.Wpf", "ShadowrunTracker.Wpf\ShadowrunTracker.Wpf.csproj", "{A23C83DB-A39E-4D9B-AED0-BEC3D319C365}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShadowrunTools.Mock", "ShadowrunTools.Mock\ShadowrunTools.Mock.csproj", "{CF2415BE-4B45-4EE1-8C16-4688A156E8F4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShadowrunTracker.Mock", "ShadowrunTracker.Mock\ShadowrunTracker.Mock.csproj", "{CF2415BE-4B45-4EE1-8C16-4688A156E8F4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

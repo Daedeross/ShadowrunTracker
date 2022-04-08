@@ -10,6 +10,8 @@ namespace ShadowrunTracker.Utils
     {
         private const int TargetNumber = 5;
 
+        public static IRoller Default { get; } = new Roller();
+
         private readonly Random _rand;
 
         public Roller()
@@ -40,6 +42,11 @@ namespace ShadowrunTracker.Utils
                 Ones = rolls.Count(r => r == 1),
                 Sum = rolls.Sum()
             };
+        }
+
+        public int Next()
+        {
+            return _rand.Next();
         }
     }
 }

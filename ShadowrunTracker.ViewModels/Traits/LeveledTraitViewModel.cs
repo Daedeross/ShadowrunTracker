@@ -1,4 +1,4 @@
-﻿using ShadowrunTools.Model;
+﻿using ShadowrunTracker.Model;
 using ShadowrunTracker.Data;
 using ShadowrunTracker.Utils;
 

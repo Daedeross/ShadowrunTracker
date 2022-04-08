@@ -1,15 +1,38 @@
 ﻿using ReactiveUI;
 using ShadowrunTracker.Model;
+using ShadowrunTracker.Utils;
 using ShadowrunTracker.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 
 namespace ShadowrunTracker.ViewModels
 {
     public class ParticipantInitiativeViewModel : ReactiveObject, IParticipantInitiativeViewModel, IDisposable
     {
+        private const int ActionCost = 10;
+
+        private static ISet<string> WatchedProperties = new HashSet<string>
+        {
+            nameof(ICharacterViewModel.CurrentState),
+            nameof(ICharacterViewModel.CurrentInitiative),
+            nameof(ICharacterViewModel.CurrentInitiativeDice),
+            nameof(ICharacterViewModel.PhysicalBoxes),
+            nameof(ICharacterViewModel.PhysicalDamage),
+            nameof(ICharacterViewModel.StunBoxes),
+            nameof(ICharacterViewModel.StunDamage),
+        };
+
         private readonly InitiativeRoll _roll; // values in it can mutate
+
+        private IRoller? _roller;
+        /// <summary>
+        /// Public to allow to be injected;
+        /// </summary>
+        public IRoller Roller { get => _roller ?? ShadowrunTracker.Utils.Roller.Default; set => _roller = value; }
 
         public ParticipantInitiativeViewModel(ICharacterViewModel character, InitiativeRoll initiativeRoll)
         {
@@ -18,6 +41,8 @@ namespace ShadowrunTracker.ViewModels
             m_InitiativeScore = _roll.Result;
 
             Character.PropertyChanged += OnCharacterPropertyChanged;
+            SetPhysicalTrack();
+            SetStunTrack();
         }
 
         public ICharacterViewModel Character { get; private set; }
@@ -27,26 +52,50 @@ namespace ShadowrunTracker.ViewModels
         public int InitiativeScore
         {
             get => m_InitiativeScore;
-            set => this.RaiseAndSetIfChanged(ref m_InitiativeScore, value);
+            set => this.SetAndRaiseIfChanged(ref m_InitiativeScore, value);
         }
 
         private bool m_SeizedInitiative;
         public bool SeizedInitiative
         {
             get => m_SeizedInitiative;
-            set => this.RaiseAndSetIfChanged(ref m_SeizedInitiative, value);
+            set => this.SetAndRaiseIfChanged(ref m_SeizedInitiative, value);
         }
 
         private bool m_Acted;
         public bool Acted
         {
             get => m_Acted;
-            set => this.RaiseAndSetIfChanged(ref m_Acted, value);
+            set => this.SetAndRaiseIfChanged(ref m_Acted, value);
         }
+
+        private int? m_TieBreaker;
+        public int TieBreaker
+        {
+            get
+            {
+                if (m_TieBreaker is null)
+                {
+                    m_TieBreaker = Roller.Next();
+                }
+
+                return m_TieBreaker.Value;
+            }
+        }
+
+        [DependsOn(nameof(Acted))]
+        [DependsOn(nameof(InitiativeScore))]
+        public bool CanAct => !Acted
+                           && InitiativeScore > 0
+                           && Character.PhysicalBoxes > Character.PhysicalDamage
+                           && Character.StunBoxes > Character.StunDamage;
+
+        public ObservableCollection<IDamageBoxViewModel> PhysicalBoxes { get; } = new ObservableCollection<IDamageBoxViewModel>();
+        public ObservableCollection<IDamageBoxViewModel> StunBoxes { get; } = new ObservableCollection<IDamageBoxViewModel>();
 
         public InitiativeRoll GetNextPass()
         {
-            if(!Acted)
+            if (!Acted)
             {
                 throw new InvalidOperationException("Character has not yet acted");
             }
@@ -54,6 +103,9 @@ namespace ShadowrunTracker.ViewModels
             return new InitiativeRoll
             {
                 CurrentState = Character.CurrentState,
+                Result = InitiativeScore - ActionCost,
+                DiceUsed = _roll.DiceUsed,
+                ScoreUsed = _roll.ScoreUsed,
             };
         }
 
@@ -61,74 +113,118 @@ namespace ShadowrunTracker.ViewModels
 
         private void OnCharacterPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (!ReferenceEquals(sender, Character))
+            if (!(ReferenceEquals(sender, Character) && WatchedProperties.Contains(e.PropertyName)))
             {
                 return;
             }
 
-            switch (_roll.CurrentState)
+            if (e.PropertyName == nameof(ICharacterViewModel.PhysicalBoxes) || e.PropertyName == nameof(ICharacterViewModel.PhysicalDamage))
             {
-                case InitiativeState.Physical:
-                    if (e.PropertyName == nameof(CharacterViewModel.PhysicalInitiative))
-                    {
-                        if (_roll.ScoreUsed != Character.PhysicalInitiative)
-                        {
-                            var diff = _roll.ScoreUsed - Character.PhysicalInitiative;
-                            _roll.ScoreUsed = Character.PhysicalInitiative;
-                            InitiativeScore += diff;
-                        }
-                    }
-                    else if (e.PropertyName == nameof(CharacterViewModel.PhysicalInitiativeDice))
-                    {
-                        if (_roll.DiceUsed != Character.PhysicalInitiativeDice)
-                        {
-                            var diff = _roll.DiceUsed - Character.PhysicalInitiativeDice;
-                            _roll.DiceUsed = Character.PhysicalInitiativeDice;
-
-                            if (diff > 0)
-                            {
-                                InitiativeScore -= diff;
-                            }
-
-                            InitiativeScore += diff;
-                        }
-                    }
-                    return;
-                case InitiativeState.Astral:
-                    if (e.PropertyName == nameof(CharacterViewModel.AstralInitiative))
-                    {
-                        if (_roll.ScoreUsed != Character.AstralInitiative)
-                        {
-                            var diff = _roll.ScoreUsed - Character.AstralInitiative;
-                            _roll.ScoreUsed = Character.AstralInitiative;
-                            InitiativeScore += diff;
-                        }
-                    }
-                    else if (e.PropertyName == nameof(CharacterViewModel.AstralInitiativeDice))
-                    {
-                        if (_roll.DiceUsed != Character.AstralInitiativeDice)
-                        {
-                            var diff = _roll.DiceUsed - Character.AstralInitiativeDice;
-                            _roll.DiceUsed = Character.AstralInitiativeDice;
-
-                            if (diff > 0)
-                            {
-                                InitiativeScore -= diff;
-                            }
-
-                            InitiativeScore += diff;
-                        }
-                    }
-                    break;
-                case InitiativeState.MatrixAR:
-                    break;
-                case InitiativeState.MatrixCold:
-                    break;
-                case InitiativeState.MatrixHot:
-                    break;
-                default:
-                    return;
+                SetPhysicalTrack();
             }
+            else if (e.PropertyName == nameof(ICharacterViewModel.StunBoxes) || e.PropertyName == nameof(ICharacterViewModel.StunDamage))
+            {
+                SetStunTrack();
+            }
+            else
+            {
+                _roll.CurrentState = Character.CurrentState;
+                int newScore = Character.CurrentInitiative;
+                int newDice = Character.CurrentInitiativeDice;
+
+                if (newScore != _roll.ScoreUsed)
+                {
+                    InitiativeScore += newScore - _roll.ScoreUsed;
+                    _roll.ScoreUsed = newScore;
+                }
+
+                if (!_roll.Blitzed)
+                {
+                    var diceDiff = newDice - _roll.DiceUsed;
+                    if (diceDiff != 0)
+                    {
+                        InitiativeScore += Roller.RollDice(Math.Abs(diceDiff)).Sum * Math.Sign(diceDiff);
+                        _roll.DiceUsed = newDice;
+                    }
+
+                }
+            }
+        }
+
+        private void SetPhysicalTrack()
+        {
+            foreach (var item in PhysicalBoxes)
+            {
+                item.PropertyChanged -= OnPhysicalTrackChanged;
+            }
+            PhysicalBoxes.Clear();
+            for (int i = 0; i < Character.PhysicalBoxes; i++)
+            {
+                var vm = new DamageBoxViewModel
+                {
+                    IsFilled = i < Character.PhysicalDamage,
+                };
+                vm.PropertyChanged += OnPhysicalTrackChanged;
+                PhysicalBoxes.Add(vm);
+            }
+            this.RaisePropertyChanged(nameof(CanAct));
+        }
+
+        private void SetStunTrack()
+        {
+            foreach (var item in StunBoxes)
+            {
+                item.PropertyChanged -= OnStunTrackChanged;
+            }
+            StunBoxes.Clear();
+            for (int i = 0; i < Character.StunBoxes; i++)
+            {
+                var vm = new DamageBoxViewModel
+                {
+                    IsFilled = i < Character.StunDamage,
+                };
+                vm.PropertyChanged += OnStunTrackChanged;
+                StunBoxes.Add(vm);
+            }
+            this.RaisePropertyChanged(nameof(CanAct));
+        }
+
+        private void OnPhysicalTrackChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(IDamageBoxViewModel.IsHovered))
+            {
+                SetHighlight(PhysicalBoxes);
+            }
+        }
+
+        private void OnStunTrackChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(IDamageBoxViewModel.IsHovered))
+            {
+                SetHighlight(StunBoxes);
+            }
+        }
+
+        private void SetHighlight(IList<IDamageBoxViewModel> track)
+        {
+            int index = -1;
+            for (int i = 0; i < track.Count; i++)
+            {
+                if (track[i].IsHovered)
+                {
+                    index = i;
+                    break;
+                }
+            }
+            for (int i = 0; i < track.Count; i++)
+            {
+                track[i].ShouldHighlight = i <= index;
+            }
+        }
+
+        private void UpdateHover(object sender, PropertyChangedEventArgs e)
+        {
+
         }
 
         #endregion

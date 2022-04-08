@@ -1,8 +1,11 @@
-﻿using System.Collections.ObjectModel;
+﻿using ShadowrunTracker.Model;
+using System;
+using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace ShadowrunTracker.ViewModels
 {
-    public interface ICombatRoundViewModel : IViewModel
+    public interface ICombatRoundViewModel : IViewModel, ICanRequestConfirmation
     {
         /// <summary>
         /// All participants in this combat round
@@ -17,21 +20,30 @@ namespace ShadowrunTracker.ViewModels
         /// <summary>
         /// The current in itiative pass
         /// </summary>
-        IInitiativePassViewModel CurrentPass { get; }
+        IInitiativePassViewModel? CurrentPass { get; }
 
         /// <summary>
         /// Move the initiative to the next participant
         /// </summary>
-        void NextToAct();
+        ICommand NextToActCommad { get; }
 
         /// <summary>
         /// Goes to the next pass, regardless of if anyone has yet to act.
         /// </summary>
-        void NextPass();
+        ICommand EndPassCommand { get; }
 
         /// <summary>
         /// Ends the combat round.
         /// </summary>
-        void EndRound();
+        ICommand EndRoundCommand { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        event EventHandler<EventArgs> RoundComplete;
+
+        void AddParticipant(IParticipantInitiativeViewModel participant, bool addToPass = false, bool acted = false);
+
+        void AddParticipant(ICharacterViewModel character, InitiativeRoll roll, bool addToPass = false, bool acted = false);
     }
 }

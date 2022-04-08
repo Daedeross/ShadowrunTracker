@@ -1,4 +1,4 @@
-﻿using ShadowrunTools.Model;
+﻿using ShadowrunTracker.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,6 +60,7 @@ namespace ShadowrunTracker.Utils
             return prop.GetCustomAttributes<DependsOnAttribute>()
                 .Select(a => a.Name).ToArray();
         }
+
         private static ICollection<T> FlattenChildren<T>(TreeNode<T> node)
         {
             var children = new HashSet<T> { };

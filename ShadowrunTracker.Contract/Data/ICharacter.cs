@@ -6,6 +6,7 @@ namespace ShadowrunTracker.Data
 {
     public interface ICharacter
     {
+        Guid Id { get; set; }
         string Alias { get; set; }
         bool IsPlayer { get; set; }
         string Player { get; set; }

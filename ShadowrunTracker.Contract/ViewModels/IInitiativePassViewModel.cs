@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace ShadowrunTracker.ViewModels
 {
@@ -11,25 +12,12 @@ namespace ShadowrunTracker.ViewModels
         ObservableCollection<IParticipantInitiativeViewModel> Participants { get; }
 
         /// <summary>
-        /// Participants that have already acted
-        /// </summary>
-        ObservableCollection<IParticipantInitiativeViewModel> Acted { get; }
-
-        /// <summary>
-        /// Participants that have not yet acted.
-        /// </summary>
-        ObservableCollection<IParticipantInitiativeViewModel> NotActed { get; }
-
-        /// <summary>
-        /// Participants that are not acting this pass.
-        /// Likely because current initiative score < 1 or KO
-        /// </summary>
-        ObservableCollection<IParticipantInitiativeViewModel> NotActing { get; }
-
-        /// <summary>
         /// The participant that is currently acting
         /// </summary>
-        IParticipantInitiativeViewModel ActiveParticipant { get; }
+        IParticipantInitiativeViewModel? ActiveParticipant { get; }
+
+        ICancelable? RightFlyoutContext { get; }
+
 
         /// <summary>
         /// Move the initiative to the next participant
@@ -39,6 +27,12 @@ namespace ShadowrunTracker.ViewModels
         /// <summary>
         /// Fired when the initiative pass is complete.
         /// </summary>
-        event EventHandler<EventArgs> OnCompleted;
+        event EventHandler<EventArgs> PassCompleted;
+
+        ICommand QueryDamageCommand { get; }
+
+        ICommand DelayActionCommand { get; }
+
+        ICommand NextCommand { get; }
     }
 }

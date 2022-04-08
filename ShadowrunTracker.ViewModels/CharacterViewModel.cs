@@ -1,37 +1,41 @@
-﻿using ReactiveUI;
-using ShadowrunTracker;
-using ShadowrunTracker.Data;
+﻿using ShadowrunTracker.Data;
 using ShadowrunTracker.Model;
-using ShadowrunTracker.ViewModels;
 using ShadowrunTracker.Utils;
+using ShadowrunTracker.ViewModels.Internal;
 using ShadowrunTracker.ViewModels.Traits;
 using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Collections.Specialized;
 using System.Collections.Generic;
-using ShadowrunTracker.ViewModels.Internal;
-using ShadowrunTools.Model;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
 
 namespace ShadowrunTracker.ViewModels
 {
-    public class CharacterViewModel : ReactiveObject, ICharacterViewModel
+    public class CharacterViewModel : ViewModelBase, ICharacterViewModel
     {
-        const int DamageTrackBase = 8;
-        const int DamageTrackRow = 3;
-        const int BasePhysicalInitiativeDice = 1;
-        const int BaseAstralInitiativeDice = 2;
-        const int BaseMatrixColdInitiativeDice = 3;
-        const int BaseMatrixHotInitiativeDice = 4;
-        const int PenaltyPerSpell = -2;
+        public const int BlitzDice = 5;
+        public const int DamageTrackBase = 8;
+        public const int DamageTrackRow = 3;
+        public const int BasePhysicalInitiativeDice = 1;
+        public const int BaseAstralInitiativeDice = 2;
+        public const int BaseMatrixColdInitiativeDice = 3;
+        public const int BaseMatrixHotInitiativeDice = 4;
+        public const int PenaltyPerSpell = -2;
 
-        private readonly IRoller _roller;
         private readonly Dictionary<IImprovementViewModel, BonusHandler> _bonusHandlers;
+
+        private IRoller _roller;
+        /// <summary>
+        /// Public to allow to be injected;
+        /// </summary>
+        public IRoller Roller { get => _roller ?? ShadowrunTracker.Utils.Roller.Default; set => _roller = value; }
 
         public CharacterViewModel(IRoller roller)
         {
             _roller = roller ?? throw new ArgumentNullException(nameof(roller));
 
+            _id        = Guid.NewGuid();
             m_Alias    = string.Empty;
             m_IsPlayer = false;
             m_Player   = string.Empty;
@@ -61,15 +65,20 @@ namespace ShadowrunTracker.ViewModels
             _bonusHandlers = Improvements.ToDictionary(
                 imp => imp,
                 imp => new BonusHandler(this, imp));
+
+            //SetPhysicalTrack();
+            //SetStunTrack();
+            //PropertyChanged += OnPropertyChanged;
         }
 
         public CharacterViewModel(IRoller roller, ICharacter loader)
         {
             _roller = roller ?? throw new ArgumentNullException(nameof(roller));
 
-            m_Alias = loader.Alias;
+            _id        = loader.Id == Guid.Empty ? Guid.NewGuid() : loader.Id;
+            m_Alias    = loader.Alias;
             m_IsPlayer = loader.IsPlayer;
-            m_Player = loader.Player;
+            m_Player   = loader.Player;
 
             m_Essence = loader.Essence;
 
@@ -96,6 +105,10 @@ namespace ShadowrunTracker.ViewModels
             _bonusHandlers = Improvements.ToDictionary(
                 imp => imp,
                 imp => new BonusHandler(this, imp));
+
+            //SetPhysicalTrack();
+            //SetStunTrack();
+            //PropertyChanged += OnPropertyChanged;
         }
 
         private void OnImprovementsChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -120,6 +133,10 @@ namespace ShadowrunTracker.ViewModels
         }
 
         #region Properties
+        #region Core
+
+        private Guid _id;
+        public Guid Id => _id;
 
         private string m_Alias = string.Empty;
         public string Alias
@@ -149,6 +166,7 @@ namespace ShadowrunTracker.ViewModels
             set => this.SetAndRaiseIfChanged(ref m_Essence, value);
         }
 
+        #endregion
         #region Attributes
 
         private int m_BaseBody;
@@ -462,6 +480,7 @@ namespace ShadowrunTracker.ViewModels
         [DependsOn(nameof(Reaction))]
         [DependsOn(nameof(Intuition))]
         [DependsOn(nameof(BonusPhysicalInitiative))]
+        [DependsOn(nameof(TotalPenalty))]
         public int PhysicalInitiative => Reaction + Intuition + m_BonusPhysicalInitiative + TotalPenalty;
 
         [DependsOn(nameof(BonusPhysicalInitiativeDice))]
@@ -484,6 +503,7 @@ namespace ShadowrunTracker.ViewModels
 
         [DependsOn(nameof(Intuition))]
         [DependsOn(nameof(BonusAstralInitiative))]
+        [DependsOn(nameof(TotalPenalty))]
         public int AstralInitiative => Intuition * 2 + BonusAstralInitiative + TotalPenalty;
 
         [DependsOn(nameof(BonusAstralInitiativeDice))]
@@ -528,6 +548,7 @@ namespace ShadowrunTracker.ViewModels
 
         [DependsOn(nameof(Intuition))]
         [DependsOn(nameof(BonusMatrixColdInitiative))]
+        [DependsOn(nameof(TotalPenalty))]
         public int MatrixColdInitiative => Intuition + m_BonusMatrixColdInitiative + TotalPenalty;
 
         [DependsOn(nameof(BonusMatrixColdInitiativeDice))]
@@ -550,12 +571,13 @@ namespace ShadowrunTracker.ViewModels
 
         [DependsOn(nameof(Intuition))]
         [DependsOn(nameof(BonusMatrixHotInitiative))]
+        [DependsOn(nameof(TotalPenalty))]
         public int MatrixHotInitiative => Intuition + m_BonusMatrixHotInitiative + TotalPenalty;
 
         [DependsOn(nameof(BonusMatrixHotInitiativeDice))]
         public int MatrixHotInitiativeDice => BaseMatrixHotInitiativeDice + m_BonusMatrixHotInitiativeDice;
 
-        private InitiativeState m_CurrentState;
+        private InitiativeState m_CurrentState = InitiativeState.Physical;
         public InitiativeState CurrentState
         {
             get => m_CurrentState;
@@ -673,7 +695,7 @@ namespace ShadowrunTracker.ViewModels
 
         #region Methods
 
-        public InitiativeRoll RollInitiative()
+        public InitiativeRoll RollInitiative(bool blitz = false)
         {
             var roll = new InitiativeRoll
             {
@@ -706,6 +728,12 @@ namespace ShadowrunTracker.ViewModels
                     return roll;
             }
 
+            if (blitz)
+            {
+                roll.Blitzed = true;
+                roll.DiceUsed = BlitzDice;
+            }
+
             roll.Result = _roller.RollDice(roll.DiceUsed).Sum + roll.ScoreUsed;
 
             return roll;
@@ -716,7 +744,7 @@ namespace ShadowrunTracker.ViewModels
             PhysicalDamage += damage;
         }
 
-        public void ApplyMentalDamage(int damage)
+        public void ApplyStunDamage(int damage)
         {
             if (damage < 1)
             {
@@ -760,5 +788,24 @@ namespace ShadowrunTracker.ViewModels
         #region Commands
 
         #endregion
+
+        //#region IDisposable
+
+        //private bool _disposedValue;
+
+        //protected override void Dispose(bool disposing)
+        //{
+        //    if (!_disposedValue)
+        //    {
+        //        if (disposing)
+        //        {
+        //            PropertyChanged -= OnPropertyChanged;
+        //        }
+
+        //        _disposedValue = true;
+        //    }
+        //}
+
+        //#endregion
     }
 }

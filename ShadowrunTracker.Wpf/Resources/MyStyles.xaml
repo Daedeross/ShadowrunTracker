@@ -1,110 +1,597 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Style x:Key="ListBoxItemStyle1"
-           TargetType="{x:Type ListBoxItem}">
-        <Setter Property="SnapsToDevicePixels"
-                Value="True" />
-        <Setter Property="Padding"
-                Value="4,1" />
-        <Setter Property="HorizontalContentAlignment"
-          Value="{Binding HorizontalContentAlignment,
-                          RelativeSource={RelativeSource FindAncestor,
-                                                         AncestorLevel=1,
-                                                         AncestorType={x:Type ItemsControl}}}" />
-        <Setter Property="VerticalContentAlignment"
-          Value="{Binding VerticalContentAlignment,
-                          RelativeSource={RelativeSource FindAncestor,
-                                                         AncestorLevel=1,
-                                                         AncestorType={x:Type ItemsControl}}}" />
-        <Setter Property="Background"
-                Value="Transparent" />
-        <Setter Property="BorderBrush"
-                Value="Transparent" />
-        <Setter Property="BorderThickness"
-                Value="1" />
-        <Setter Property="FocusVisualStyle">
-            <Setter.Value>
-                <Style>
-                    <Setter Property="Control.Template">
-                        <Setter.Value>
-                            <ControlTemplate>
-                                <Rectangle Margin="2"
-                                           SnapsToDevicePixels="True"
-                                           Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
-                                           StrokeDashArray="1 2"
-                                           StrokeThickness="1" />
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
-            </Setter.Value>
-        </Setter>
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=mscorlib"
+                    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+                    xmlns:cv="clr-namespace:ShadowrunTracker.Wpf.Converters"
+                    xmlns:helpers="clr-namespace:ShadowrunTracker.Wpf.Helpers">
+
+    <SolidColorBrush x:Key="ShadowrunPrimaryRed" Color="#FFED2024" Opacity="1" />
+    <SolidColorBrush x:Key="ShadowrunPrimaryRed75" Color="#7FED2024" Opacity="1" />
+    <SolidColorBrush x:Key="ShadowrunPrimaryRed50" Color="#7FED2024" Opacity="1" />
+    <SolidColorBrush x:Key="ShadowrunPrimaryRed25" Color="#3BED2024" Opacity="1" />
+
+    <cv:FlagsEnumConverter x:Key="FlagsEnumConverter" />
+    
+    <Style x:Key="MyMaterialDesignListBoxItem" TargetType="{x:Type ListBoxItem}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+        <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+        <Setter Property="Padding" Value="8"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="helpers:MyListBoxItemAssist.ShowParts" Value="{Binding Path=(helpers:MyListBoxItemAssist.ShowParts), RelativeSource={RelativeSource AncestorType=ListBox}}"/>
+        <Setter Property="helpers:MyListBoxItemAssist.RippleBrush" Value="{Binding Path=(helpers:MyListBoxItemAssist.RippleBrush), RelativeSource={RelativeSource AncestorType=ListBox}}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ListBoxItem}">
-                    <Border x:Name="Bd"
-                            Background="{TemplateBinding Background}"
+                    <Border Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            Padding="{TemplateBinding Padding}"
-                            SnapsToDevicePixels="True">
-                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                          Content="{TemplateBinding Content}"
-                                          ContentStringFormat="{TemplateBinding ContentStringFormat}"
-                                          ContentTemplate="{TemplateBinding ContentTemplate}"
-                                          SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                            Margin="{TemplateBinding Margin}"
+                            ClipToBounds="{TemplateBinding ClipToBounds}">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup Name="CommonStates">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition GeneratedDuration="0:0:0.3" To="Normal">
+                                        <VisualTransition.GeneratedEasingFunction>
+                                            <CircleEase EasingMode="EaseOut"/>
+                                        </VisualTransition.GeneratedEasingFunction>
+                                    </VisualTransition>
+                                </VisualStateGroup.Transitions>
+                                <VisualState Name="Normal"/>
+                                <VisualState Name="MouseOver">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="MouseOverBorder" Storyboard.TargetProperty="Opacity"
+                                                         To="0.1" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState Name="Disabled"/>
+                            </VisualStateGroup>
+                            <VisualStateGroup Name="SelectionStates">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition GeneratedDuration="0:0:0.6"/>
+                                </VisualStateGroup.Transitions>
+                                <VisualState Name="Selected">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="SelectedBorder"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0.18" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState Name="Unselected"/>
+                                <VisualState Name="SelectedUnfocused">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="SelectedBorder"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0.03" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Grid>
+                            <Border x:Name="MouseOverBorder"
+                                    Opacity="0"
+                                    Background="{TemplateBinding Foreground, Converter={StaticResource BrushRoundConverter}}"/>
+
+                            <Border x:Name="SelectedBorder" Opacity="0"
+                                    Background="{TemplateBinding Foreground, Converter={StaticResource BrushRoundConverter}}">
+                            </Border>
+                            <materialDesign:Ripple x:Name="Ripple"
+                                                   Feedback="{TemplateBinding Foreground, Converter={StaticResource BrushRoundConverter}}"
+                                                   Focusable="False"
+                                                   Content="{TemplateBinding Content}"
+                                                   ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                   ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
+                                                   SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                                   HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                                   VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                   Padding="{TemplateBinding Padding}"
+                                                   RecognizesAccessKey="False"/>
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
-                        <MultiTrigger>
-                            <MultiTrigger.Conditions>
-                                <Condition Property="IsMouseOver"
-                                           Value="True" />
-                            </MultiTrigger.Conditions>
-                            <Setter TargetName="Bd"
-                                    Property="Background"
-                                    Value="Transparent" />
-                            <Setter TargetName="Bd"
-                                    Property="BorderBrush"
-                                    Value="Transparent" />
-                        </MultiTrigger>
-                        <MultiTrigger>
-                            <MultiTrigger.Conditions>
-                                <Condition Property="Selector.IsSelectionActive"
-                                           Value="False" />
-                                <Condition Property="IsSelected"
-                                           Value="True" />
-                            </MultiTrigger.Conditions>
-                            <Setter TargetName="Bd"
-                                    Property="Background"
-                                    Value="Transparent" />
-                            <Setter TargetName="Bd"
-                                    Property="BorderBrush"
-                                    Value="Transparent" />
-                        </MultiTrigger>
-                        <MultiTrigger>
-                            <MultiTrigger.Conditions>
-                                <Condition Property="Selector.IsSelectionActive"
-                                           Value="True" />
-                                <Condition Property="IsSelected"
-                                           Value="True" />
-                            </MultiTrigger.Conditions>
-                            <Setter TargetName="Bd"
-                                    Property="Background"
-                                    Value="Transparent" />
-                            <Setter TargetName="Bd"
-                                    Property="BorderBrush"
-                                    Value="Transparent" />
-                        </MultiTrigger>
-                        <Trigger Property="IsEnabled"
-                                 Value="False">
-                            <Setter TargetName="Bd"
-                                    Property="TextElement.Foreground"
-                                    Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value=".56" />
                         </Trigger>
+                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=(helpers:MyListBoxItemAssist.ShowParts), Converter={StaticResource FlagsEnumConverter}, ConverterParameter={x:Static helpers:ListBoxItemParts.MouseOver}, Mode=OneWay}" Value="False">
+                            <Setter TargetName="MouseOverBorder" Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=(helpers:MyListBoxItemAssist.ShowParts), Converter={StaticResource FlagsEnumConverter}, ConverterParameter={x:Static helpers:ListBoxItemParts.Selection}, Mode=OneWay}" Value="False">
+                            <Setter TargetName="SelectedBorder" Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=(helpers:MyListBoxItemAssist.ShowParts), Converter={StaticResource FlagsEnumConverter}, ConverterParameter={x:Static helpers:ListBoxItemParts.Ripple}, Mode=OneWay}" Value="False">
+                            <Setter TargetName="Ripple" Property="Feedback" Value="Transparent"/>
+                        </DataTrigger>
+                        <!--<DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=(helpers:MyListBoxItemAssist.ShowParts), Converter={StaticResource FlagsEnumConverter}, ConverterParameter={x:Static helpers:ListBoxItemParts.Selection}, Mode=OneWay}" Value="False">
+                            <Setter TargetName="SelectedBorder" Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>-->
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+    <materialDesign:BrushToRadialGradientBrushConverter x:Key="BrushToRadialGradientBrushConverter" />
+    <materialDesign:DrawerOffsetConverter x:Key="DrawerOffsetConverter" />
+
+    <Style TargetType="{x:Type materialDesign:DrawerHost}" x:Key="MyDrawerHostStyle">
+        <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth3" />
+        <Setter Property="ClipToBounds" Value="True" />
+        <Setter Property="OverlayBackground" Value="{DynamicResource BlackBackground}" />
+        <Setter Property="LeftDrawerBackground" Value="{DynamicResource MaterialDesignPaper}" />
+        <Setter Property="TopDrawerBackground" Value="{DynamicResource MaterialDesignPaper}" />
+        <Setter Property="RightDrawerBackground" Value="{DynamicResource MaterialDesignPaper}" />
+        <Setter Property="BottomDrawerBackground" Value="{DynamicResource MaterialDesignPaper}" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type materialDesign:DrawerHost}">
+                    <Border BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="AllDrawers">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition From="AllClosed" To="AnyOpen">
+                                        <Storyboard>
+                                            <BooleanAnimationUsingKeyFrames Storyboard.TargetName="PART_ContentCover" Storyboard.TargetProperty="IsHitTestVisible">
+                                                <DiscreteBooleanKeyFrame Value="True" KeyTime="0" />
+                                            </BooleanAnimationUsingKeyFrames>
+                                            <BooleanAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Tag">
+                                                <DiscreteBooleanKeyFrame Value="False" KeyTime="0" />
+                                            </BooleanAnimationUsingKeyFrames>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="PART_ContentCover" Storyboard.TargetProperty="Opacity">
+                                                <EasingDoubleKeyFrame Value="0" KeyTime="0" />
+                                                <EasingDoubleKeyFrame Value=".56" KeyTime="0:0:0.3">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <SineEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualTransition>
+                                    <VisualTransition From="AnyOpen" To="AllClosed">
+                                        <Storyboard>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="PART_ContentCover" Storyboard.TargetProperty="Opacity">
+                                                <EasingDoubleKeyFrame Value="0.56" KeyTime="0" />
+                                                <EasingDoubleKeyFrame Value="0" KeyTime="0:0:0.3">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <SineEase EasingMode="EaseInOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualTransition>
+                                </VisualStateGroup.Transitions>
+                                <VisualState x:Name="AnyOpen">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="PART_ContentCover" Storyboard.TargetProperty="Opacity"
+                                                         To=".56" Duration="0" />
+                                        <BooleanAnimationUsingKeyFrames Storyboard.TargetName="PART_ContentCover" Storyboard.TargetProperty="IsHitTestVisible">
+                                            <DiscreteBooleanKeyFrame Value="True" KeyTime="0" />
+                                        </BooleanAnimationUsingKeyFrames>
+                                        <BooleanAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Tag">
+                                            <DiscreteBooleanKeyFrame Value="False" KeyTime="0" />
+                                        </BooleanAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="AllClosed">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="PART_ContentCover" Storyboard.TargetProperty="Opacity"
+                                                         To="0" />
+                                        <BooleanAnimationUsingKeyFrames Storyboard.TargetName="PART_ContentCover" Storyboard.TargetProperty="IsHitTestVisible">
+                                            <DiscreteBooleanKeyFrame Value="False" />
+                                        </BooleanAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="LeftDrawer">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition From="LeftDrawerClosed" To="LeftDrawerOpen">
+                                        <Storyboard>
+                                            <ThicknessAnimationUsingKeyFrames Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_LeftDrawer">
+                                                <EasingThicknessKeyFrame Value="0" KeyTime="0:0:0.4">
+                                                    <EasingThicknessKeyFrame.EasingFunction>
+                                                        <SineEase EasingMode="EaseOut" />
+                                                    </EasingThicknessKeyFrame.EasingFunction>
+                                                </EasingThicknessKeyFrame>
+                                            </ThicknessAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetName="LeftDrawerShadow" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.04" />
+                                        </Storyboard>
+                                    </VisualTransition>
+                                    <VisualTransition From="LeftDrawerOpen" To="LeftDrawerClosed">
+                                        <Storyboard>
+                                            <ThicknessAnimation Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_LeftDrawer" Duration="0:0:0.4">
+                                                <ThicknessAnimation.EasingFunction>
+                                                    <SineEase EasingMode="EaseOut" />
+                                                </ThicknessAnimation.EasingFunction>
+                                            </ThicknessAnimation>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="LeftDrawerShadow" Storyboard.TargetProperty="Opacity">
+                                                <EasingDoubleKeyFrame Value="1" KeyTime="0:0:0.36" />
+                                                <EasingDoubleKeyFrame Value="0" KeyTime="0:0:0.4">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <SineEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualTransition>
+                                </VisualStateGroup.Transitions>
+                                <VisualState x:Name="LeftDrawerOpen">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="LeftDrawerShadow" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0" />
+                                        <ThicknessAnimation Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_LeftDrawer" To="0" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="LeftDrawerClosed">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="LeftDrawerShadow" Storyboard.TargetProperty="Opacity" From="0" To="0" Duration="0" />
+                                        <ThicknessAnimation Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_LeftDrawer" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="RightDrawer">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition From="RightDrawerClosed" To="RightDrawerOpen">
+                                        <Storyboard>
+                                            <ThicknessAnimationUsingKeyFrames Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_RightDrawer">
+                                                <EasingThicknessKeyFrame Value="0" KeyTime="0:0:0.4">
+                                                    <EasingThicknessKeyFrame.EasingFunction>
+                                                        <SineEase EasingMode="EaseOut" />
+                                                    </EasingThicknessKeyFrame.EasingFunction>
+                                                </EasingThicknessKeyFrame>
+                                            </ThicknessAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetName="RightDrawerShadow" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.04" />
+                                        </Storyboard>
+                                    </VisualTransition>
+                                    <VisualTransition From="RightDrawerOpen" To="RightDrawerClosed">
+                                        <Storyboard>
+                                            <ThicknessAnimation Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_RightDrawer" Duration="0:0:0.4">
+                                                <ThicknessAnimation.EasingFunction>
+                                                    <SineEase EasingMode="EaseOut" />
+                                                </ThicknessAnimation.EasingFunction>
+                                            </ThicknessAnimation>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="RightDrawerShadow" Storyboard.TargetProperty="Opacity">
+                                                <EasingDoubleKeyFrame Value="1" KeyTime="0:0:0.36" />
+                                                <EasingDoubleKeyFrame Value="0" KeyTime="0:0:0.4">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <SineEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualTransition>
+                                </VisualStateGroup.Transitions>
+                                <VisualState x:Name="RightDrawerOpen">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="RightDrawerShadow" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0" />
+                                        <ThicknessAnimation Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_RightDrawer" To="0 0 0 0" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="RightDrawerClosed">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="RightDrawerShadow" Storyboard.TargetProperty="Opacity" From="0" To="0" Duration="0" />
+                                        <ThicknessAnimation Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_RightDrawer" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="TopDrawer">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition From="TopDrawerClosed" To="TopDrawerOpen">
+                                        <Storyboard>
+                                            <ThicknessAnimationUsingKeyFrames Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_TopDrawer">
+                                                <EasingThicknessKeyFrame Value="0" KeyTime="0:0:0.4">
+                                                    <EasingThicknessKeyFrame.EasingFunction>
+                                                        <SineEase EasingMode="EaseOut" />
+                                                    </EasingThicknessKeyFrame.EasingFunction>
+                                                </EasingThicknessKeyFrame>
+                                            </ThicknessAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetName="TopDrawerShadow" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.04" />
+                                        </Storyboard>
+                                    </VisualTransition>
+                                    <VisualTransition From="TopDrawerOpen" To="TopDrawerClosed">
+                                        <Storyboard>
+                                            <ThicknessAnimation Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_TopDrawer" Duration="0:0:0.4">
+                                                <ThicknessAnimation.EasingFunction>
+                                                    <SineEase EasingMode="EaseOut" />
+                                                </ThicknessAnimation.EasingFunction>
+                                            </ThicknessAnimation>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="TopDrawerShadow" Storyboard.TargetProperty="Opacity">
+                                                <EasingDoubleKeyFrame Value="1" KeyTime="0:0:0.36" />
+                                                <EasingDoubleKeyFrame Value="0" KeyTime="0:0:0.4">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <SineEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualTransition>
+                                </VisualStateGroup.Transitions>
+                                <VisualState x:Name="TopDrawerOpen">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="TopDrawerShadow" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0" />
+                                        <ThicknessAnimation Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_TopDrawer" To="0" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="TopDrawerClosed">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="TopDrawerShadow" Storyboard.TargetProperty="Opacity" From="0" To="0" Duration="0" />
+                                        <ThicknessAnimation Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_TopDrawer" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="BottomDrawer">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition From="BottomDrawerClosed" To="BottomDrawerOpen">
+                                        <Storyboard>
+                                            <ThicknessAnimationUsingKeyFrames Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_BottomDrawer">
+                                                <EasingThicknessKeyFrame Value="0" KeyTime="0:0:0.4">
+                                                    <EasingThicknessKeyFrame.EasingFunction>
+                                                        <SineEase EasingMode="EaseOut" />
+                                                    </EasingThicknessKeyFrame.EasingFunction>
+                                                </EasingThicknessKeyFrame>
+                                            </ThicknessAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetName="BottomDrawerShadow" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.04" />
+                                        </Storyboard>
+                                    </VisualTransition>
+                                    <VisualTransition From="BottomDrawerOpen" To="BottomDrawerClosed">
+                                        <Storyboard>
+                                            <ThicknessAnimation Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_BottomDrawer" Duration="0:0:0.4">
+                                                <ThicknessAnimation.EasingFunction>
+                                                    <SineEase EasingMode="EaseOut" />
+                                                </ThicknessAnimation.EasingFunction>
+                                            </ThicknessAnimation>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="BottomDrawerShadow" Storyboard.TargetProperty="Opacity">
+                                                <EasingDoubleKeyFrame Value="1" KeyTime="0:0:0.36" />
+                                                <EasingDoubleKeyFrame Value="0" KeyTime="0:0:0.4">
+                                                    <EasingDoubleKeyFrame.EasingFunction>
+                                                        <SineEase EasingMode="EaseOut" />
+                                                    </EasingDoubleKeyFrame.EasingFunction>
+                                                </EasingDoubleKeyFrame>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualTransition>
+                                </VisualStateGroup.Transitions>
+                                <VisualState x:Name="BottomDrawerOpen">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="BottomDrawerShadow" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0" />
+                                        <ThicknessAnimation Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_BottomDrawer" To="0 0 0 0" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="BottomDrawerClosed">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="BottomDrawerShadow" Storyboard.TargetProperty="Opacity" From="0" To="0" Duration="0" />
+                                        <ThicknessAnimation Storyboard.TargetProperty="Margin" Storyboard.TargetName="PART_BottomDrawer" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Grid x:Name="RootGrid">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <AdornerDecorator Grid.Column="1" Grid.Row="1">
+                                <ContentPresenter 
+                                    x:Name="ContentPresenter"
+                                    Content="{TemplateBinding Content}"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}"
+                                    ContentStringFormat="{TemplateBinding ContentStringFormat}">
+                                    <ContentPresenter.Tag>
+                                        <system:Boolean>False</system:Boolean>
+                                    </ContentPresenter.Tag>
+                                </ContentPresenter>
+                            </AdornerDecorator>
+                            <Grid x:Name="PART_ContentCover"
+                                  Opacity="0"
+                                  IsHitTestVisible="False"
+                                  Focusable="False"
+                                  Grid.Column="0"
+                                  Grid.Row="0"
+                                  Grid.ColumnSpan="3"
+                                  Grid.RowSpan="3">
+                                <Grid.Style>
+                                    <Style TargetType="Grid">
+                                        <Setter Property="Background" Value="{Binding OverlayBackground, RelativeSource={RelativeSource TemplatedParent}}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding OpenMode, RelativeSource={RelativeSource TemplatedParent}}" Value="Standard">
+                                                <Setter Property="Background" Value="{x:Null}" />
+                                            </DataTrigger>
+                                            <Trigger Property="Opacity" Value="0">
+                                                <Setter Property="Visibility" Value="Hidden" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Grid.Style>
+                            </Grid>
+                            <Grid HorizontalAlignment="Left" VerticalAlignment="Stretch"
+                                  x:Name="PART_LeftDrawer"
+                                  Margin="{Binding RelativeSource={RelativeSource Self}, Path=ActualWidth, Converter={StaticResource DrawerOffsetConverter}, ConverterParameter={x:Static Dock.Left}}"
+                                  Panel.ZIndex="{TemplateBinding LeftDrawerZIndex}">
+                                <Grid.Style>
+                                    <Style TargetType="Grid">
+                                        <Setter Property="Grid.Column" Value="1" />
+                                        <Setter Property="Grid.Row" Value="1" />
+                                        <Setter Property="Grid.RowSpan" Value="1" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding OpenMode, RelativeSource={RelativeSource TemplatedParent}}" Value="Standard">
+                                                <Setter Property="Grid.Column" Value="0" />
+                                                <Setter Property="Grid.Row" Value="0" />
+                                                <Setter Property="Grid.RowSpan" Value="3" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Grid.Style>
+
+                                <AdornerDecorator CacheMode="{Binding RelativeSource={RelativeSource Self}, Path=(materialDesign:ShadowAssist.CacheMode)}">
+                                    <Border Effect="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(materialDesign:ShadowAssist.ShadowDepth), Converter={x:Static materialDesign:ShadowConverter.Instance}}"
+                                            Opacity="0" CornerRadius="{TemplateBinding LeftDrawerCornerRadius}"
+                                            Background="{TemplateBinding LeftDrawerBackground}"
+                                            x:Name="LeftDrawerShadow">
+                                    </Border>
+                                </AdornerDecorator>
+                                <ContentPresenter Content="{TemplateBinding LeftDrawerContent}" ContentTemplate="{TemplateBinding LeftDrawerContentTemplate}" ContentTemplateSelector="{TemplateBinding LeftDrawerContentTemplateSelector}"  ContentStringFormat="{TemplateBinding LeftDrawerContentStringFormat}"
+                                                    IsEnabled="{TemplateBinding IsLeftDrawerOpen}"
+                                                    />
+                            </Grid>
+                            <Grid VerticalAlignment="Stretch" HorizontalAlignment="Right"
+                                  x:Name="PART_RightDrawer"
+                                  Margin="{Binding RelativeSource={RelativeSource Self}, Path=ActualWidth, Converter={StaticResource DrawerOffsetConverter}, ConverterParameter={x:Static Dock.Right}}"
+                                  Panel.ZIndex="{TemplateBinding RightDrawerZIndex}">
+                                <Grid.Style>
+                                    <Style TargetType="Grid">
+                                        <Setter Property="Grid.Column" Value="1" />
+                                        <Setter Property="Grid.Row" Value="1" />
+                                        <Setter Property="Grid.RowSpan" Value="1" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding OpenMode, RelativeSource={RelativeSource TemplatedParent}}" Value="Standard">
+                                                <Setter Property="Grid.Column" Value="2" />
+                                                <Setter Property="Grid.Row" Value="0" />
+                                                <Setter Property="Grid.RowSpan" Value="3" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Grid.Style>
+                                <AdornerDecorator CacheMode="{Binding RelativeSource={RelativeSource Self}, Path=(materialDesign:ShadowAssist.CacheMode)}">
+                                    <Border Effect="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(materialDesign:ShadowAssist.ShadowDepth), Converter={x:Static materialDesign:ShadowConverter.Instance}}"
+                                            Opacity="0" CornerRadius="{TemplateBinding RightDrawerCornerRadius}"
+                                            Background="{TemplateBinding RightDrawerBackground}"
+                                            x:Name="RightDrawerShadow">
+                                    </Border>
+                                </AdornerDecorator>
+                                <ContentPresenter Content="{TemplateBinding RightDrawerContent}" ContentTemplate="{TemplateBinding RightDrawerContentTemplate}" ContentTemplateSelector="{TemplateBinding RightDrawerContentTemplateSelector}" ContentStringFormat="{TemplateBinding RightDrawerContentStringFormat}"
+                                                  IsEnabled="{TemplateBinding IsRightDrawerOpen}" />
+                            </Grid>
+                            <Grid HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                                  x:Name="PART_TopDrawer"
+                                  Margin="{Binding RelativeSource={RelativeSource Self}, Path=ActualHeight, Converter={StaticResource DrawerOffsetConverter}, ConverterParameter={x:Static Dock.Top}}"
+                                  Panel.ZIndex="{TemplateBinding TopDrawerZIndex}">
+                                <Grid.Style>
+                                    <Style TargetType="Grid">
+                                        <Setter Property="Grid.Column" Value="1" />
+                                        <Setter Property="Grid.Row" Value="1" />
+                                        <Setter Property="Grid.RowSpan" Value="1" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding OpenMode, RelativeSource={RelativeSource TemplatedParent}}" Value="Standard">
+                                                <Setter Property="Grid.Column" Value="0" />
+                                                <Setter Property="Grid.Row" Value="0" />
+                                                <Setter Property="Grid.ColumnSpan" Value="3" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Grid.Style>
+                                <AdornerDecorator CacheMode="{Binding RelativeSource={RelativeSource Self}, Path=(materialDesign:ShadowAssist.CacheMode)}">
+                                    <Border Effect="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(materialDesign:ShadowAssist.ShadowDepth), Converter={x:Static materialDesign:ShadowConverter.Instance}}"
+                                            Opacity="0" CornerRadius="{TemplateBinding TopDrawerCornerRadius}"
+                                            Background="{TemplateBinding TopDrawerBackground}"
+                                            x:Name="TopDrawerShadow">
+                                    </Border>
+                                </AdornerDecorator>
+                                <ContentPresenter Content="{TemplateBinding TopDrawerContent}" ContentTemplate="{TemplateBinding TopDrawerContentTemplate}" ContentTemplateSelector="{TemplateBinding TopDrawerContentTemplateSelector}" ContentStringFormat="{TemplateBinding TopDrawerContentStringFormat}"
+                                                  IsEnabled="{TemplateBinding IsTopDrawerOpen}" />
+                            </Grid>
+                            <Grid VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
+                                  x:Name="PART_BottomDrawer"
+                                  Margin="{Binding RelativeSource={RelativeSource Self}, Path=ActualHeight, Converter={StaticResource DrawerOffsetConverter}, ConverterParameter={x:Static Dock.Bottom}}"
+                                  Panel.ZIndex="{TemplateBinding BottomDrawerZIndex}">
+                                <Grid.Style>
+                                    <Style TargetType="Grid">
+                                        <Setter Property="Grid.Column" Value="1" />
+                                        <Setter Property="Grid.Row" Value="1" />
+                                        <Setter Property="Grid.RowSpan" Value="1" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding OpenMode, RelativeSource={RelativeSource TemplatedParent}}" Value="Standard">
+                                                <Setter Property="Grid.Column" Value="0" />
+                                                <Setter Property="Grid.Row" Value="2" />
+                                                <Setter Property="Grid.ColumnSpan" Value="3" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Grid.Style>
+                                <AdornerDecorator CacheMode="{Binding RelativeSource={RelativeSource Self}, Path=(materialDesign:ShadowAssist.CacheMode)}">
+                                    <Border Effect="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(materialDesign:ShadowAssist.ShadowDepth), Converter={x:Static materialDesign:ShadowConverter.Instance}}"
+                                            Opacity="0" CornerRadius="{TemplateBinding BottomDrawerCornerRadius}"
+                                            Background="{TemplateBinding BottomDrawerBackground}"
+                                            x:Name="BottomDrawerShadow">
+                                    </Border>
+                                </AdornerDecorator>
+                                <ContentPresenter Content="{TemplateBinding BottomDrawerContent}" ContentTemplate="{TemplateBinding BottomDrawerContentTemplate}" ContentTemplateSelector="{TemplateBinding BottomDrawerContentTemplateSelector}" ContentStringFormat="{TemplateBinding BottomDrawerContentStringFormat}"
+                                                  IsEnabled="{TemplateBinding IsBottomDrawerOpen}"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="MaterialDesignCircleContainer" TargetType="{x:Type ContentControl}">
+        <Style.Resources>
+            <ResourceDictionary>
+                <Style TargetType="materialDesign:PackIcon" BasedOn="{StaticResource {x:Type materialDesign:PackIcon}}">
+                    <Setter Property="Width" Value="20" />
+                    <Setter Property="Height" Value="20" />
+                </Style>
+            </ResourceDictionary>
+        </Style.Resources>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidForegroundBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}"/>
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="materialDesign:ShadowAssist.ShadowDepth" Value="Depth0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ContentControl}">
+                    <Grid Effect="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(materialDesign:ShadowAssist.ShadowDepth), Converter={x:Static materialDesign:ShadowConverter.Instance}}">
+                        <Grid x:Name="OffGrid" RenderTransformOrigin=".5,.5" Background="{TemplateBinding Background}">
+                            <ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}"
+                                              ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" 
+                                              FlowDirection="LeftToRight"/>
+                            <Grid.Clip>
+                                <EllipseGeometry RadiusX="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Width, Converter={StaticResource DivisionMathConverter}, ConverterParameter=2.0}" 
+                                                 RadiusY="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Height, Converter={StaticResource DivisionMathConverter}, ConverterParameter=2.0}">
+                                    <EllipseGeometry.Center>
+                                        <MultiBinding Converter="{StaticResource PointValueConverter}">
+                                            <Binding RelativeSource="{RelativeSource TemplatedParent}" Path="Width" Converter="{StaticResource DivisionMathConverter}" ConverterParameter="2.0" />
+                                            <Binding RelativeSource="{RelativeSource TemplatedParent}" Path="Height" Converter="{StaticResource DivisionMathConverter}" ConverterParameter="2.0" />
+                                        </MultiBinding>
+                                    </EllipseGeometry.Center>
+                                </EllipseGeometry>
+                            </Grid.Clip>
+                            <Grid.RenderTransform>
+                                <ScaleTransform x:Name="OffScaleTransform" ScaleX="1" ScaleY="1" />
+                            </Grid.RenderTransform>
+                        </Grid>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="MaterialDesignActionLightCircleContainer" TargetType="{x:Type ContentControl}" BasedOn="{StaticResource MaterialDesignCircleContainer}">
+        <Setter Property="Background" Value="{DynamicResource PrimaryHueLightBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHueLightBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueLightForegroundBrush}"/>
+    </Style>
+
+    <Style x:Key="MaterialDesignActionDarkCircleContainer" TargetType="{x:Type ContentControl}" BasedOn="{StaticResource MaterialDesignCircleContainer}">
+        <Setter Property="Background" Value="{DynamicResource PrimaryHueDarkBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHueDarkBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkForegroundBrush}"/>
+    </Style>
+
+    <Style x:Key="MaterialDesignActionAccentCircleContainer" TargetType="{x:Type ContentControl}" BasedOn="{StaticResource MaterialDesignCircleContainer}">
+        <Setter Property="Background" Value="{DynamicResource SecondaryHueMidBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource SecondaryHueMidBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryHueMidForegroundBrush}"/>
     </Style>
 </ResourceDictionary>

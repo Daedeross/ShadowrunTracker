@@ -3,7 +3,7 @@ using ShadowrunTracker.Model;
 
 namespace ShadowrunTracker.ViewModels.Traits
 {
-    public class InitiativeScoreViewModel : ReactiveObject
+    public class InitiativeScoreViewModel : ReactiveObject, IInitiativeScoreViewModel
     {
         public InitiativeState State { get; init; }
 

@@ -1,6 +1,7 @@
 ﻿using ReactiveUI;
 using ShadowrunTracker.ViewModels;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -8,18 +9,12 @@ namespace ShadowrunTracker.Utils
 {
     public static class ViewModelExtensions
     {
-        private static readonly Dictionary<Type, DependencyGraph> _typePropTrees
-            = new Dictionary<Type, DependencyGraph>();
+        private static readonly ConcurrentDictionary<Type, DependencyGraph> _typePropTrees
+            = new ConcurrentDictionary<Type, DependencyGraph>();
 
         public static DependencyGraph GetDependencyGraph(Type type)
         {
-            if (!_typePropTrees.TryGetValue(type, out var graph))
-            {
-                graph = new DependencyGraph(type);
-                _typePropTrees.Add(type, graph);
-            }
-
-            return graph;
+            return _typePropTrees.GetOrAdd(type, t => new DependencyGraph(t));
         }
 
         public static ICollection<string> GetDependentPropertyNames(Type type, string propertyName)
@@ -41,7 +36,7 @@ namespace ShadowrunTracker.Utils
         /// <param name="propertyName">The name of the property, usually
         /// automatically provided through the CallerMemberName attribute.</param>
         /// <returns>The newly set value, normally discarded.</returns>
-        public static TRet RaiseAndSetIfChanged<TObj, TRet>(
+        public static TRet RaiseAndSetIfChanged2<TObj, TRet>(
             this TObj reactiveObject,
             ref TRet backingField,
             TRet newValue,

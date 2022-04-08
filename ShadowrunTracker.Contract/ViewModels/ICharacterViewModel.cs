@@ -9,6 +9,8 @@ namespace ShadowrunTracker.ViewModels
 {
     public interface ICharacterViewModel : IViewModel
     {
+        Guid Id { get; }
+
         string Alias { get; set; }
         bool IsPlayer { get; set; }
         string Player { get; set; }
@@ -82,6 +84,10 @@ namespace ShadowrunTracker.ViewModels
 
         int TotalPenalty { get; }
 
+        //ObservableCollection<bool> PhysicalDamageTrack { get; }
+
+        //ObservableCollection<bool> StunDamageTrack { get; }
+
         #endregion
 
         #region Initiatives
@@ -154,11 +160,11 @@ namespace ShadowrunTracker.ViewModels
 
         #region Methods
 
-        InitiativeRoll RollInitiative();
+        InitiativeRoll RollInitiative(bool blitz = false);
 
         void ApplyPhysicalDamage(int damage);
 
-        void ApplyMentalDamage(int damage);
+        void ApplyStunDamage(int damage);
 
 
         void ApplyPhysicalHealing(int healing);

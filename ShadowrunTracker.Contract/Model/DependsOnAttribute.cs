@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ShadowrunTools.Model
+namespace ShadowrunTracker.Model
 {
     /// <summary>
     /// Indicates that the property depends on the value of another property in markup.

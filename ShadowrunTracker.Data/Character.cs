@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace ShadowrunTracker.Data
@@ -6,6 +7,9 @@ namespace ShadowrunTracker.Data
     [DataContract]
     public class Character : ICharacter
     {
+        [DataMember]
+        public Guid Id { get; set; }
+
         [DataMember]
         public string Alias { get; set; } = string.Empty;
 

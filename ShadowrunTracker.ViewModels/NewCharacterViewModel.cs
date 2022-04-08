@@ -1,28 +1,18 @@
 ﻿using ReactiveUI;
+using ShadowrunTracker.Data;
 using ShadowrunTracker.Model;
 using ShadowrunTracker.ViewModels.Traits;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Windows.Input;
 
 namespace ShadowrunTracker.ViewModels
 {
-    public class NewCharacterViewModel : ReactiveObject
+    public class NewCharacterViewModel : ReusableModalViewModelBase<ICharacterViewModel?>, INewCharacterViewModel
     {
-        public NewCharacterViewModel()
+        private static IReadOnlyCollection<IInitiativeScoreViewModel> DefaultInitiatives()
         {
-            Character = new CharacterViewModel(new Utils.Roller());
-        }
-
-        public NewCharacterViewModel(IRoller roller)
-        {
-            Character = new CharacterViewModel(roller);
-        }
-
-        public ICharacterViewModel Character { get; }
-
-        public IReadOnlyCollection<InitiativeScoreViewModel> Initiatives { get; }
-            = new List<InitiativeScoreViewModel>
+            return new List<InitiativeScoreViewModel>
             {
                 new InitiativeScoreViewModel
                 {
@@ -53,7 +43,84 @@ namespace ShadowrunTracker.ViewModels
                     State = InitiativeState.MatrixHot,
                     Score = 2,
                     Dice = 4,
-                },
+                }
             };
+        }
+
+        private readonly IViewModelFactory _viewModelFactory;
+
+        private ICharacterViewModel? m_Character;
+        public ICharacterViewModel? Character
+        {
+            get => m_Character;
+            set => this.RaiseAndSetIfChanged(ref m_Character, value);
+        }
+
+        public IReadOnlyCollection<IInitiativeScoreViewModel> Initiatives { get; private set; } = DefaultInitiatives();
+
+        public NewCharacterViewModel(IViewModelFactory viewModelFactory)
+        {
+            _viewModelFactory = viewModelFactory;
+            OnReset();
+        }
+
+        protected override void OnStart()
+        {
+
+        }
+        protected override ICharacterViewModel? OkResult()
+        {
+            SetInitiatives();
+            return Character;
+        }
+
+        protected override ICharacterViewModel? CancelResult()
+        {
+            return default;
+        }
+
+        protected override void OnReset()
+        {
+            Character = _viewModelFactory.Create<ICharacterViewModel>();
+            this.RaisePropertyChanging(nameof(Initiatives));
+            Initiatives = DefaultInitiatives();
+            this.RaisePropertyChanged(nameof(Initiatives));
+        }
+
+        private void SetInitiatives()
+        {
+            if (Character is null)
+            {
+                throw new ArgumentNullException(nameof(Character));
+            }
+            foreach (var init in Initiatives)
+            {
+                switch (init.State)
+                {
+                    case InitiativeState.Physical:
+                        Character.Improve(nameof(Character.PhysicalInitiativeDice), c => c.PhysicalInitiativeDice, init.Dice);
+                        Character.Improve(nameof(Character.PhysicalInitiative), c => c.PhysicalInitiative, init.Score);
+                        break;
+                    case InitiativeState.Astral:
+                        Character.Improve(nameof(Character.AstralInitiativeDice), c => c.AstralInitiativeDice, init.Dice);
+                        Character.Improve(nameof(Character.AstralInitiative), c => c.AstralInitiative, init.Score);
+                        break;
+                    case InitiativeState.MatrixAR:
+                        Character.Improve(nameof(Character.MatrixARInitiativeDice), c => c.MatrixARInitiativeDice, init.Dice);
+                        Character.Improve(nameof(Character.MatrixARInitiative), c => c.MatrixARInitiative, init.Score);
+                        break;
+                    case InitiativeState.MatrixCold:
+                        Character.Improve(nameof(Character.MatrixColdInitiativeDice), c => c.MatrixColdInitiativeDice, init.Dice);
+                        Character.Improve(nameof(Character.MatrixColdInitiative), c => c.MatrixColdInitiative, init.Score);
+                        break;
+                    case InitiativeState.MatrixHot:
+                        Character.Improve(nameof(Character.MatrixHotInitiativeDice), c => c.MatrixHotInitiativeDice, init.Dice);
+                        Character.Improve(nameof(Character.MatrixHotInitiative), c => c.MatrixHotInitiative, init.Score);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
     }
 }
