@@ -55,12 +55,6 @@ namespace ShadowrunTracker.Data
         [DataMember]
         public int Resonance { get; set; }
 
-        //[DataMember]
-        //public int BonusPhysicalBoxes { get; set; }
-
-        //[DataMember]
-        //public int BonusStunBoxes { get; set; }
-
         [DataMember]
         public bool PainEditor { get; set; }
 

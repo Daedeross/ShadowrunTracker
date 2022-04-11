@@ -7,7 +7,9 @@
                           xmlns:vmi="clr-namespace:ShadowrunTracker.ViewModels;assembly=ShadowrunTracker.Contract"
                           xmlns:vm="clr-namespace:ShadowrunTracker.ViewModels;assembly=ShadowrunTracker.ViewModels"
                           xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+                          xmlns:mui="http://schemas.modernwpf.com/2019"
                           xmlns:rxui="http://reactiveui.net"
+                          xmlns:sys="clr-namespace:System;assembly=mscorlib"
                           xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
                           xmlns:mock="clr-namespace:ShadowrunTracker.Mock;assembly=ShadowrunTracker.Mock"
                           xmlns:local="clr-namespace:ShadowrunTracker.Wpf.Views"
@@ -25,6 +27,7 @@
             <Setter Property="BorderThickness" Value="0.5" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
         </Style>
+        <sys:Double x:Key="IconSize">22</sys:Double>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -125,5 +128,23 @@
                        Grid.Row="1" >
             </TextBlock>
         </Grid>
+        <mui:SimpleStackPanel Grid.Column="5"
+                              HorizontalAlignment="Right"
+                              Orientation="Horizontal"
+                              Margin="8"
+                              Spacing="8">
+            <Button Name="SaveCharacterButton"
+                    Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                    ToolTip="MaterialDesignFloatingActionMiniLightButton"
+                    Content="{materialDesign:PackIcon Kind=Floppy, Size={StaticResource IconSize}}"
+                    />
+            <Button Name="DeleteCharacterButton"
+                    Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                    ToolTip="MaterialDesignFloatingActionMiniLightButton"
+                    Background="MediumVioletRed"
+                    BorderBrush="MediumVioletRed"
+                    Content="{materialDesign:PackIcon Kind=Delete, Size={StaticResource IconSize}}"
+                    />
+        </mui:SimpleStackPanel>
     </Grid>
 </rxui:ReactiveUserControl>

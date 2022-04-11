@@ -1,4 +1,5 @@
-﻿using ShadowrunTracker.Model;
+﻿using ShadowrunTracker.Data;
+using ShadowrunTracker.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,7 +8,7 @@ using System.Text;
 
 namespace ShadowrunTracker.ViewModels
 {
-    public interface ICharacterViewModel : IViewModel
+    public interface ICharacterViewModel : IViewModel, ICanSave
     {
         Guid Id { get; }
 

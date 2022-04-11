@@ -150,22 +150,45 @@
                     </Grid>
                 </Border>
             </Expander>
-            <ToggleButton Name="NewParticipantButton"
+            <materialDesign:PopupBox Name="AddParticipantBox"
+                                     Style="{DynamicResource MaterialDesignMultiFloatingActionPopupBox}"
+                                     PlacementMode="TopAndAlignCentres"
+                                     Grid.Row="1"
+                                     Margin="8"
+                                     HorizontalAlignment="Right"
+                                     VerticalAlignment="Bottom"
+                                     ToolTipService.Placement="Right"
+                                     Height="42" Width="42"
+                                     ToolTip="PopupBox, Style MaterialDesignMultiFloatingActionPopupBox">
+                <StackPanel>
+                    <Button Name="NewParticipantButton"
+                            ToolTip="Enter New"
+                            Content="{materialDesign:PackIcon Kind=Pencil, Size=22}" />
+                    <Button Name="ImportParticipantButton"
+                            ToolTip="Import New"
+                            Content="{materialDesign:PackIcon Kind=Import, Size=22}" />
+                    <Button Name="LoadParticipantButton"
+                            ToolTip="Load Saved"
+                            Content="{materialDesign:PackIcon Kind=FolderOpen, Size=22}" />
+                </StackPanel>
+            </materialDesign:PopupBox>
+            <!--<ToggleButton Name="NewParticipantButton"
                           VerticalAlignment="Bottom"
                           HorizontalAlignment="Right"
                           Grid.Row="1"
                           Width="42" Height="42"
                           ToolTip="Add Parcicipant"
+                          Visibility="Hidden"
                           Content="{materialDesign:PackIcon Kind=Plus, Size=22}">
-                      <!--materialDesign:ToggleButtonAssist.OnContent="{materialDesign:PackIcon Kind=Cancel, Size=22}"
-                          >-->
+                      --><!--materialDesign:ToggleButtonAssist.OnContent="{materialDesign:PackIcon Kind=Cancel, Size=22}"
+                          >--><!--
                 <ToggleButton.Style>
                     <Style TargetType="ToggleButton" BasedOn="{StaticResource MaterialDesignActionAccentToggleButton}">
                         <Setter Property="Margin" Value="0 0 8 8" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsBottomDrawerOpen, RelativeSource={RelativeSource AncestorType=materialDesign:DrawerHost}}"
                                          Value="True">
-                                <!--<DataTrigger.EnterActions>
+                                --><!--<DataTrigger.EnterActions>
                                     <BeginStoryboard>
                                         <Storyboard>
                                             <BooleanAnimationUsingKeyFrames>
@@ -173,7 +196,7 @@
                                             </BooleanAnimationUsingKeyFrames>
                                         </Storyboard>
                                     </BeginStoryboard>
-                                </DataTrigger.EnterActions>-->
+                                </DataTrigger.EnterActions>--><!--
                             </DataTrigger>
                             <DataTrigger Binding="{Binding IsBottomDrawerOpen, RelativeSource={RelativeSource AncestorType=materialDesign:DrawerHost}}"
                                          Value="False">
@@ -182,7 +205,7 @@
                         </Style.Triggers>
                     </Style>
                 </ToggleButton.Style>
-            </ToggleButton>
+            </ToggleButton>-->
             <Button Name="NewRoundButton"
                     Grid.Row="1"
                     VerticalAlignment="Bottom"

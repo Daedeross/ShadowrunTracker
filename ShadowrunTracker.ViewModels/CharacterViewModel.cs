@@ -1,4 +1,5 @@
-﻿using ShadowrunTracker.Data;
+﻿using ReactiveUI;
+using ShadowrunTracker.Data;
 using ShadowrunTracker.Model;
 using ShadowrunTracker.Utils;
 using ShadowrunTracker.ViewModels.Internal;
@@ -9,6 +10,9 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Disposables;
+using System.Windows.Input;
 
 namespace ShadowrunTracker.ViewModels
 {
@@ -66,9 +70,8 @@ namespace ShadowrunTracker.ViewModels
                 imp => imp,
                 imp => new BonusHandler(this, imp));
 
-            //SetPhysicalTrack();
-            //SetStunTrack();
-            //PropertyChanged += OnPropertyChanged;
+            SaveCommand = ReactiveCommand.Create(Save)
+                .DisposeWith(_disposables);
         }
 
         public CharacterViewModel(IRoller roller, ICharacter loader)
@@ -106,9 +109,8 @@ namespace ShadowrunTracker.ViewModels
                 imp => imp,
                 imp => new BonusHandler(this, imp));
 
-            //SetPhysicalTrack();
-            //SetStunTrack();
-            //PropertyChanged += OnPropertyChanged;
+            SaveCommand = ReactiveCommand.Create(Save)
+                .DisposeWith(_disposables);
         }
 
         private void OnImprovementsChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -785,27 +787,25 @@ namespace ShadowrunTracker.ViewModels
 
         #endregion
 
+        #region ICanSave
+
+        public ICommand SaveCommand { get; }
+
+        public void Save()
+        {
+            Interactions.sa.Handle(ToRecord());
+        }
+
+        public string Serialize()
+        {
+            return this.ToModel();
+        }
+
+        #endregion
+
         #region Commands
 
         #endregion
 
-        //#region IDisposable
-
-        //private bool _disposedValue;
-
-        //protected override void Dispose(bool disposing)
-        //{
-        //    if (!_disposedValue)
-        //    {
-        //        if (disposing)
-        //        {
-        //            PropertyChanged -= OnPropertyChanged;
-        //        }
-
-        //        _disposedValue = true;
-        //    }
-        //}
-
-        //#endregion
     }
 }
