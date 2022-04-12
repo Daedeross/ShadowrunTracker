@@ -5,10 +5,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Text;
+using System.Windows.Input;
 
 namespace ShadowrunTracker.ViewModels
 {
-    public interface ICharacterViewModel : IViewModel, ICanSave
+    public interface ICharacterViewModel : IViewModel, ICanSave, IRecordViewModel<ICharacter>
     {
         Guid Id { get; }
 
@@ -84,10 +85,6 @@ namespace ShadowrunTracker.ViewModels
         int SpellsSustained { get; set; }
 
         int TotalPenalty { get; }
-
-        //ObservableCollection<bool> PhysicalDamageTrack { get; }
-
-        //ObservableCollection<bool> StunDamageTrack { get; }
 
         #endregion
 
@@ -173,5 +170,9 @@ namespace ShadowrunTracker.ViewModels
         void ApplyStunHealing(int healing);
 
         #endregion
+
+        ICommand RemoveCharacter { get; }
+
+        event EventHandler<RemoveCharacterEventArgs> Remove;
     }
 }

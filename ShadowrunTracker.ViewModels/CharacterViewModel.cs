@@ -16,7 +16,7 @@ using System.Windows.Input;
 
 namespace ShadowrunTracker.ViewModels
 {
-    public class CharacterViewModel : ViewModelBase, ICharacterViewModel
+    public class CharacterViewModel : CanRequestConfirmationBase, ICharacterViewModel
     {
         public const int BlitzDice = 5;
         public const int DamageTrackBase = 8;
@@ -29,11 +29,15 @@ namespace ShadowrunTracker.ViewModels
 
         private readonly Dictionary<IImprovementViewModel, BonusHandler> _bonusHandlers;
 
+        private string? _filename;
+
         private IRoller _roller;
         /// <summary>
         /// Public to allow to be injected;
         /// </summary>
         public IRoller Roller { get => _roller ?? ShadowrunTracker.Utils.Roller.Default; set => _roller = value; }
+
+        public bool IsChanged { get; set; }
 
         public CharacterViewModel(IRoller roller)
         {
@@ -71,6 +75,8 @@ namespace ShadowrunTracker.ViewModels
                 imp => new BonusHandler(this, imp));
 
             SaveCommand = ReactiveCommand.Create(Save)
+                .DisposeWith(_disposables);
+            RemoveCharacter = ReactiveCommand.Create(RemoveCharacterExecute)
                 .DisposeWith(_disposables);
         }
 
@@ -110,6 +116,8 @@ namespace ShadowrunTracker.ViewModels
                 imp => new BonusHandler(this, imp));
 
             SaveCommand = ReactiveCommand.Create(Save)
+                .DisposeWith(_disposables);
+            RemoveCharacter = ReactiveCommand.Create(RemoveCharacterExecute)
                 .DisposeWith(_disposables);
         }
 
@@ -169,6 +177,7 @@ namespace ShadowrunTracker.ViewModels
         }
 
         #endregion
+
         #region Attributes
 
         private int m_BaseBody;
@@ -793,10 +802,20 @@ namespace ShadowrunTracker.ViewModels
 
         public void Save()
         {
-            Interactions.sa.Handle(ToRecord());
+            Interactions.SaveDialog
+                .Handle(new SaveContext(ToRecord(), IsChanged, _filename))
+                .Subscribe(s =>
+                {
+                    if (s != null)
+                    {
+                        _filename = s;
+                        IsChanged = false;
+                    }
+                })
+                .DisposeWith(_disposables);
         }
 
-        public string Serialize()
+        public ICharacter ToRecord()
         {
             return this.ToModel();
         }
@@ -805,7 +824,24 @@ namespace ShadowrunTracker.ViewModels
 
         #region Commands
 
+        public ICommand RemoveCharacter { get; }
+
+        private void RemoveCharacterExecute()
+        {
+            RequestConfirmation($"Remove {Alias} from the encounter?", Delete);
+        }
+
         #endregion
 
+        #region Events
+
+        public event EventHandler<RemoveCharacterEventArgs>? Remove;
+
+        public void Delete()
+        {
+            Remove?.Invoke(this, new RemoveCharacterEventArgs(this));
+        }
+
+        #endregion
     }
 }

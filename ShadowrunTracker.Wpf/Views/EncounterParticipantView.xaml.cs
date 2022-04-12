@@ -57,6 +57,12 @@ namespace ShadowrunTracker.Wpf.Views
                 ViewModel.WhenAnyValue(vm => vm.StunDamage, vm => vm.StunBoxes, (dam, max) => $"{max - dam} / {max}")
                     .BindTo(this, v => v.StunDamageText.Text)
                     .DisposeWith(d);
+
+                this.BindCommand(ViewModel, vm => vm.SaveCommand, v => v.SaveCharacterButton)
+                    .DisposeWith(d);
+
+                this.BindCommand(ViewModel, vm => vm.RemoveCharacter, v => v.DeleteCharacterButton)
+                    .DisposeWith(d);
             });
         }
     }

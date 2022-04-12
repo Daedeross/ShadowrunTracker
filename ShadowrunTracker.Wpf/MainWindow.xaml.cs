@@ -4,15 +4,19 @@ using MahApps.Metro.Controls;
 using MaterialDesignThemes.Wpf;
 using ReactiveMarbles.ObservableEvents;
 using ReactiveUI;
+using ShadowrunTracker.Data;
+using ShadowrunTracker.Model;
 using ShadowrunTracker.Utils;
 using ShadowrunTracker.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -56,7 +60,7 @@ namespace ShadowrunTracker.Wpf
             _viewModelFactory = viewModelFactory;
 
             //requestInitiatives.DataContext = new Mock.MockRequestInitiativesViewModel();
-                
+
             this.WhenActivated(d =>
             {
                 this.BindCommand(ViewModel, vm => vm.NewEncounter, v => v.NewEncounterButton)
@@ -67,6 +71,10 @@ namespace ShadowrunTracker.Wpf
 
                 Interactions.ConfirmationRequest
                     .RegisterHandler(RequestConfirmation)
+                    .DisposeWith(d);
+
+                Interactions.SaveDialog
+                    .RegisterHandler(SaveObject)
                     .DisposeWith(d);
             });
 
@@ -92,6 +100,100 @@ namespace ShadowrunTracker.Wpf
             {
                 cancelable.Cancel();
             }
+        }
+
+        private void SaveObject(InteractionContext<SaveContext, string> context)
+        {
+            if (context.Input.SaveAs || context.Input.Filename is null)
+            {
+                var filename = context.Input.Filename ?? "character";
+                context.SetOutput(SaveDialog(context.Input.Object, filename));
+            }
+            else
+            {
+                context.SetOutput(SaveToFile(context.Input.Object, context.Input.Filename));
+            }
+        }
+
+        private string SaveDialog(object obj, string filename)
+        {
+            try
+            {
+                var dialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    FileName = $"{filename}",
+                    DefaultExt = ".json",
+                    Filter = "Json documents (.json)|*.json" // Filter files by extension
+                };
+
+                bool? result = dialog.ShowDialog();
+
+                if (result == true)
+                {
+                    using (var stream = dialog.OpenFile())
+                    {
+                        JsonSerializer.Serialize(stream, obj);
+                    }
+
+                    return dialog.FileName;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e);
+                return null;
+            }
+        }
+
+        private string SaveToFile(object obj, string filename)
+        {
+            try
+            {
+                using var stream = new FileStream(filename, FileMode.Open);
+                JsonSerializer.Serialize(stream, obj);
+
+                return filename;
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e);
+                return null;
+            }
+        }
+
+        private ICharacter LoadCharacter()
+        {
+            try
+            {
+                var dialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    DefaultExt = ".json",
+                    Filter = "Json documents (.json)|*.json"
+                };
+
+                bool? result = dialog.ShowDialog();
+
+                if (result == true)
+                {
+                    using (var stream = dialog.OpenFile())
+                    {
+                        return JsonSerializer.Deserialize<Character>(stream);
+                    }
+                }
+
+                return null;
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e);
+
+                return null;
+            }
+
         }
     }
 }

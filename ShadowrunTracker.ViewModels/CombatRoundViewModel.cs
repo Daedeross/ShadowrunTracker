@@ -159,6 +159,33 @@ namespace ShadowrunTracker.ViewModels
             AddParticipant(_viewModelFactory.Create(character, roll));
         }
 
+        public bool RemoveParticipant(IParticipantInitiativeViewModel participant)
+        {
+            if (Participants.Remove(participant))
+            {
+                CurrentPass.Participants.Remove(participant);
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool RemoveParticipant(ICharacterViewModel character)
+        {
+            var participant = Participants.SingleOrDefault(p => Equals(p.Character, character));
+            if (participant is null)
+            {
+                return false; ;
+            }
+            else
+            {
+                return RemoveParticipant(participant);
+            }
+        }
+
         #region IDisposable
 
         private bool _disposedValue;

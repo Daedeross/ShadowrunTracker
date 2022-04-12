@@ -1,4 +1,5 @@
 ﻿using ReactiveUI;
+using ShadowrunTracker.Utils;
 using System;
 using System.Reactive.Disposables;
 
@@ -10,12 +11,11 @@ namespace ShadowrunTracker.ViewModels
 
         public CanRequestConfirmationBase()
         {
-            ConfirmationRequest = new Interaction<string, bool>();
             _confirmationSubscription = new SerialDisposable();
             _disposables.Add(_confirmationSubscription);
         }
 
-        public Interaction<string, bool> ConfirmationRequest { get; }
+        public Interaction<string, bool> ConfirmationRequest => Interactions.ConfirmationRequest;
 
         protected void RequestConfirmation(string message, Action<bool> handler)
         {

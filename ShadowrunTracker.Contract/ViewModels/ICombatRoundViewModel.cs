@@ -45,5 +45,9 @@ namespace ShadowrunTracker.ViewModels
         void AddParticipant(IParticipantInitiativeViewModel participant, bool addToPass = false, bool acted = false);
 
         void AddParticipant(ICharacterViewModel character, InitiativeRoll roll, bool addToPass = false, bool acted = false);
+
+        bool RemoveParticipant(IParticipantInitiativeViewModel participant);
+
+        bool RemoveParticipant(ICharacterViewModel character);
     }
 }

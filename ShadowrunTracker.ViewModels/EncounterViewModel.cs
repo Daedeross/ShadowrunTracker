@@ -16,6 +16,12 @@ namespace ShadowrunTracker.ViewModels
         private readonly SerialDisposable _requestSubscription;
         private readonly SerialDisposable _newParticipantSubscription;
 
+        /// <summary>
+        /// For participants that are removed, but had at some point acted.
+        /// For Encounter history/logs TBD.
+        /// </summary>
+        private readonly List<ICharacterViewModel> _removedParticipants = new List<ICharacterViewModel>();
+
         public EncounterViewModel(IViewModelFactory viewModelFactory)
         {
             _viewModelFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
@@ -57,12 +63,29 @@ namespace ShadowrunTracker.ViewModels
                 {
                     CurrentRound?.AddParticipant(character, initiative, addToPass, acted);
                 }
+                character.Remove += OnRemoveCharacter;
             }
         }
 
         public void AddParticipant(ICharacter character, InitiativeRoll? initiative = null, bool addToPass = false, bool acted = false)
         {
             AddParticipant(_viewModelFactory.Create(character), initiative, addToPass, acted);
+        }
+
+        public void RemoveParticipant(ICharacterViewModel character)
+        {
+            character.Remove -= OnRemoveCharacter;
+            if (Participants.Remove(character))
+            {
+                if (CurrentRound != null)
+                {
+                    // If the character is in the current round, they should be archived.
+                    if(CurrentRound.RemoveParticipant(character))
+                    {
+                        _removedParticipants.Add(character);
+                    }
+                }
+            }
         }
 
         public ICommand NextRoundCommand { get; }
@@ -92,6 +115,11 @@ namespace ShadowrunTracker.ViewModels
             CurrentRound.RoundComplete -= OnRoundComplete;
             #nullable enable
             NextRound();
+        }
+
+        private void OnRemoveCharacter(object sender, RemoveCharacterEventArgs e)
+        {
+            RemoveParticipant(e.Character);
         }
 
         public ICommand NewParticipantCommand { get; }

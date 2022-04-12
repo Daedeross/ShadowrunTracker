@@ -103,6 +103,11 @@ namespace ShadowrunTracker.Utils
             backingField = newValue;
             viewModel.RaiseChangedWithDependents(propertyName);
 
+            if (viewModel is ICanSave canSave)
+            {
+                canSave.IsChanged = true;
+            }
+
             return newValue;
         }
 
