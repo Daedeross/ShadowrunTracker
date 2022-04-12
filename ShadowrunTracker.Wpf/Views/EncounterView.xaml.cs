@@ -25,6 +25,10 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
 using ShadowrunTracker.Utils;
+using ShadowrunTracker.Model;
+using ShadowrunTracker.Data;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace ShadowrunTracker.Wpf.Views
 {
@@ -66,10 +70,19 @@ namespace ShadowrunTracker.Wpf.Views
                         .RegisterHandler(c => RequestInitiatives(c, d))
                         .DisposeWith(d);
 
-                    this.BindInteraction(ViewModel, vm => vm.GetNewCharacter, ctx => GetNewCharacter(ctx, d))
+                    this.BindInteraction(ViewModel, vm => vm.GetNewCharacter, GetNewCharacter)
                         .DisposeWith(d);
 
-                    this.BindCommand(ViewModel, vm => vm.NewParticipantCommand, v => v.NewParticipantButton)
+                    this.BindCommand(ViewModel,
+                                     vm => vm.NewParticipantCommand,
+                                     v => v.NewParticipantButton,
+                                     Observable.Return(ImportMode.New))
+                        .DisposeWith(d);
+
+                    this.BindCommand(ViewModel,
+                                     vm => vm.NewParticipantCommand,
+                                     v => v.LoadParticipantButton,
+                                     Observable.Return(ImportMode.File))
                         .DisposeWith(d);
 
                     this.BindCommand(ViewModel, vm => vm.NextRoundCommand, v => v.NewRoundButton)
@@ -113,8 +126,19 @@ namespace ShadowrunTracker.Wpf.Views
                 .Select(x => Unit.Default);
         }
 
-        private IObservable<Unit> GetNewCharacter(InteractionContext<Unit, ICharacterViewModel> context,
-                                                  CompositeDisposable disposables)
+        private IObservable<Unit> GetNewCharacter(InteractionContext<ImportMode, ICharacterViewModel> context)
+        {
+            return context.Input switch
+            {
+                ImportMode.New => NewCharacterEntry(context),
+                //ImportMode.Library =>
+                ImportMode.File => LoadCharacter(context),
+                //ImportMode.ChummerFile =>
+                _ => Observable.Empty<Unit>()
+            };
+        }
+
+        private IObservable<Unit> NewCharacterEntry(InteractionContext<ImportMode, ICharacterViewModel> context)
         {
             _dockContexts.AddOrUpdate(Dock.Bottom, _newCharacterViewModel, (d, vm) =>
             {
@@ -122,25 +146,56 @@ namespace ShadowrunTracker.Wpf.Views
                 return _newCharacterViewModel;
             });
 
-            var o = _newCharacterViewModel.Start()
+            EncounterDrawerHost.IsBottomDrawerOpen = true;
+
+            return _newCharacterViewModel.Start()
                 .Do(character =>
-                    {
-                        _dockContexts.Remove(Dock.Bottom, out var _);
-                        EncounterDrawerHost.IsBottomDrawerOpen = false;
-                        context.SetOutput(character);
-                    }
-                ).Select(x => Unit.Default);
-
-            Dispatcher.Invoke(() =>
-            {
-                Task.Delay(200);
-                Observable.Start(() =>
                 {
-                    EncounterDrawerHost.IsBottomDrawerOpen = true;
-                }, RxApp.MainThreadScheduler);
-            });
+                    _dockContexts.Remove(Dock.Bottom, out var _);
+                    EncounterDrawerHost.IsBottomDrawerOpen = false;
+                    context.SetOutput(character);
+                }
+                ).Select(x => Unit.Default);
+        }
 
-            return o;
+        private IObservable<Unit> LoadCharacter(InteractionContext<ImportMode, ICharacterViewModel> context)
+        {
+            return Observable.Start(LoadCharacterFromFile, RxApp.MainThreadScheduler)
+                .Do(c => context.SetOutput(_viewModelFactory.Create(c)))
+                .Select(x => Unit.Default);
+        }
+
+        private ICharacter LoadCharacterFromFile()
+        {
+            try
+            {
+                var dialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    DefaultExt = ".json",
+                    Filter = "Json documents (.json)|*.json"
+                };
+
+                bool? result = dialog.ShowDialog();
+
+                if (result == true)
+                {
+                    var ser = JsonSerializer.CreateDefault();
+                    using (var stream = dialog.OpenFile())
+                    {
+                        var reader = new JsonTextReader(new StreamReader(stream));
+                        var foo = ser.Deserialize<Character>(reader);
+                        return foo;
+                    }
+                }
+
+                return null;
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e);
+
+                return null;
+            }
         }
 
         private void CancelDockModal(Dock dock)

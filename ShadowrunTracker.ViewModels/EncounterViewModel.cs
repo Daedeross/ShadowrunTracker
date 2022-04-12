@@ -27,10 +27,10 @@ namespace ShadowrunTracker.ViewModels
             _viewModelFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
 
             NextRoundCommand = ReactiveCommand.Create(() => NextRound());
-            NewParticipantCommand = ReactiveCommand.Create(NewParticipant);
+            NewParticipantCommand = ReactiveCommand.Create<ImportMode>(NewParticipant, outputScheduler: RxApp.MainThreadScheduler);
 
             RequestInitiatives = new Interaction<IEnumerable<ICharacterViewModel>, IEnumerable<IParticipantInitiativeViewModel>>();
-            GetNewCharacter = new Interaction<Unit, ICharacterViewModel>();
+            GetNewCharacter = new Interaction<ImportMode, ICharacterViewModel>();
 
             _requestSubscription = new SerialDisposable();
             _disposables.Add(_requestSubscription);
@@ -45,7 +45,7 @@ namespace ShadowrunTracker.ViewModels
 
         public Interaction<IEnumerable<ICharacterViewModel>, IEnumerable<IParticipantInitiativeViewModel>> RequestInitiatives { get; }
 
-        public Interaction<Unit, ICharacterViewModel> GetNewCharacter { get; }
+        public Interaction<ImportMode, ICharacterViewModel> GetNewCharacter { get; }
 
         private ICombatRoundViewModel? m_CurrentRound;
         public ICombatRoundViewModel? CurrentRound
@@ -124,10 +124,10 @@ namespace ShadowrunTracker.ViewModels
 
         public ICommand NewParticipantCommand { get; }
 
-        private void NewParticipant()
+        private void NewParticipant(ImportMode mode)
         {
             _newParticipantSubscription.Disposable = GetNewCharacter
-                .Handle(Unit.Default)
+                .Handle(mode)
                 .Subscribe(p => AddParticipant(p));
         }
     }

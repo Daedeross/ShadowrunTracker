@@ -193,7 +193,6 @@ namespace ShadowrunTracker.Wpf
 
                 return null;
             }
-
         }
     }
 }

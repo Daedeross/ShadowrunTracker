@@ -159,17 +159,17 @@
                                      VerticalAlignment="Bottom"
                                      ToolTipService.Placement="Right"
                                      Height="42" Width="42"
-                                     ToolTip="PopupBox, Style MaterialDesignMultiFloatingActionPopupBox">
+                                     ToolTip="Add Participant">
                 <StackPanel>
-                    <Button Name="NewParticipantButton"
-                            ToolTip="Enter New"
-                            Content="{materialDesign:PackIcon Kind=Pencil, Size=22}" />
                     <Button Name="ImportParticipantButton"
                             ToolTip="Import New"
                             Content="{materialDesign:PackIcon Kind=Import, Size=22}" />
                     <Button Name="LoadParticipantButton"
                             ToolTip="Load Saved"
                             Content="{materialDesign:PackIcon Kind=FolderOpen, Size=22}" />
+                    <Button Name="NewParticipantButton"
+                            ToolTip="Enter New"
+                            Content="{materialDesign:PackIcon Kind=Pencil, Size=22}" />
                 </StackPanel>
             </materialDesign:PopupBox>
             <!--<ToggleButton Name="NewParticipantButton"
@@ -212,6 +212,7 @@
                     HorizontalAlignment="Left"
                     materialDesign:ButtonAssist.CornerRadius="5"
                     Margin="8 0 0 8"
+                    ToolTip="Start Next Round"
                     Style="{StaticResource MaterialDesignRaisedLightButton}">
                 Next Round
             </Button>

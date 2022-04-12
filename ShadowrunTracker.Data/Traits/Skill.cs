@@ -8,5 +8,21 @@ namespace ShadowrunTracker.Data.Traits
     {
         [DataMember]
         public SR5Attribute LinkedAttribute { get; set; }
+
+        public Skill()
+        {
+
+        }
+
+        public Skill(ISkill s)
+        {
+            Name = s.Name;
+            Description = s.Description;
+            Notes = s.Notes;
+            Source = s.Source;
+            Page = s.Page;
+
+            Rating = s.Rating;
+        }
     }
 }

@@ -1,5 +1,7 @@
-﻿using System;
+﻿using ShadowrunTracker.Data.Traits;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 
 namespace ShadowrunTracker.Data
@@ -11,13 +13,13 @@ namespace ShadowrunTracker.Data
         public Guid Id { get; set; }
 
         [DataMember]
-        public string Alias { get; set; } = string.Empty;
+        public string? Alias { get; set; }
 
         [DataMember]
         public bool IsPlayer { get; set; }
 
         [DataMember]
-        public string Player { get; set; } = string.Empty;
+        public string? Player { get; set; }
 
         [DataMember]
         public decimal Essence { get; set; }
@@ -64,10 +66,23 @@ namespace ShadowrunTracker.Data
         [DataMember]
         public int SpellsSustained { get; set; }
 
-        [DataMember]
-        public List<ISkill> Skills { get; set; } = new();
+        [DataMember(Name = nameof(Skills))]
+        public List<Skill> _skills { get; set; } = new();
+        [IgnoreDataMember]
+        public List<ISkill> Skills
+        {
+            get => _skills.Cast<ISkill>().ToList();
+            set => _skills = value.Select(s => new Skill(s)).ToList();
+        }
 
-        [DataMember]
-        public List<IImprovement> Improvements { get; set; } = new();
+        [DataMember(Name = nameof(Improvements))]
+        public List<Improvement> _improvements { get; set; } = new();
+
+        [IgnoreDataMember]
+        public List<IImprovement> Improvements
+        {
+            get => _improvements.Cast<IImprovement>().ToList();
+            set => _improvements = value.Select(s => new Improvement(s)).ToList();
+        }
     }
 }

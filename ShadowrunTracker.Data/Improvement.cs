@@ -17,5 +17,18 @@ namespace ShadowrunTracker.Data
 
         [DataMember]
         public int Value { get; set; }
+
+        public Improvement()
+        {
+
+        }
+
+        public Improvement(IImprovement i)
+        {
+            Name = i.Name;
+            Target = i.Target;
+            TargetKind = i.TargetKind;
+            Value = i.Value;
+        }
     }
 }

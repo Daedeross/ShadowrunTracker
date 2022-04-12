@@ -39,5 +39,13 @@ namespace ShadowrunTracker.Mock
         {
             return new MockCombatRoundViewModel();
         }
+
+        public void Release(IViewModel viewModel)
+        {
+            if (viewModel is IDisposable d)
+            {
+                d.Dispose();
+            }
+        }
     }
 }

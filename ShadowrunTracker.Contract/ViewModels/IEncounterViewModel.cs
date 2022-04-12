@@ -28,6 +28,6 @@ namespace ShadowrunTracker.ViewModels
 
         Interaction<IEnumerable<ICharacterViewModel>, IEnumerable<IParticipantInitiativeViewModel>> RequestInitiatives { get; }
 
-        Interaction<Unit, ICharacterViewModel> GetNewCharacter { get; }
+        Interaction<ImportMode, ICharacterViewModel> GetNewCharacter { get; }
     }
 }

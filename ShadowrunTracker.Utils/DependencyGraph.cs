@@ -10,7 +10,7 @@ namespace ShadowrunTracker.Utils
     {
         private class TreeNode<T>
         {
-            public T Value { get; set; }
+            public T? Value { get; set; }
             public List<TreeNode<T>> Children { get; } = new List<TreeNode<T>>();
         }
 

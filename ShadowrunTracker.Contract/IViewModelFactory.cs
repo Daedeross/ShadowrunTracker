@@ -9,7 +9,7 @@ namespace ShadowrunTracker
     {
         T Create<T>() where T : class, IViewModel;
 
-        ICharacterViewModel Create(ICharacter character);
+        ICharacterViewModel Create(ICharacter loader);
 
         IParticipantInitiativeViewModel Create(ICharacterViewModel character, InitiativeRoll initiative);
 
@@ -18,5 +18,7 @@ namespace ShadowrunTracker
         ICombatRoundViewModel CreateRound(IEnumerable<IParticipantInitiativeViewModel> participants);
 
         IInitiativePassViewModel CreatePass(IEnumerable<IParticipantInitiativeViewModel> participants);
+
+        public void Release(IViewModel viewModel);
     }
 }
