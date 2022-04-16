@@ -27,6 +27,18 @@ namespace ShadowrunTracker.Model
                 return 1;
             }
 
+            if (x.SeizedInitiative)
+            {
+                if (!y.SeizedInitiative)
+                {
+                    return -1;
+                }
+            }
+            else if (y.SeizedInitiative)
+            {
+                return 1;
+            }
+
             var score = y.InitiativeScore.CompareTo(x.InitiativeScore);
             if (score != 0)
             {

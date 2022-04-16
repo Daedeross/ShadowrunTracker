@@ -47,13 +47,13 @@ namespace ShadowrunTracker.ViewModels
             var sorted = participants.ToList();
             sorted.Sort(ParticipantInitiativeReverseComparer.Default);
 
-            ActiveParticipant = sorted.First();
-
             Participants = new ObservableCollection<IParticipantInitiativeViewModel>(sorted);
 
             _acted = new List<IParticipantInitiativeViewModel>();
-            _notActed = sorted.Where(p => p.InitiativeScore > 0).ToList();
+            _notActed = sorted.Where(p => p.InitiativeScore > 0).OrderBy(p => p, ParticipantInitiativeReverseComparer.Default).ToList();
             _notActing = sorted.Where(p => p.InitiativeScore <= 0).ToList();
+
+            ActiveParticipant = _notActed.FirstOrDefault();
 
             var queryDamage = ReactiveCommand.Create<ICharacterViewModel>(QueryDamageExecute);
             var delayAction = ReactiveCommand.Create<IParticipantInitiativeViewModel>(DelayActionExecute);
@@ -133,11 +133,6 @@ namespace ShadowrunTracker.ViewModels
 
         public void RemoveParticipant(IParticipantInitiativeViewModel participant)
         {
-            if (!Participants.Contains(participant))
-            {
-                throw new InvalidOperationException("participant not in collection");
-            }
-
             participant.PropertyChanged -= OnParticipantPropertyChanged;
             _acted.Remove(participant);
             _notActed.Remove(participant);

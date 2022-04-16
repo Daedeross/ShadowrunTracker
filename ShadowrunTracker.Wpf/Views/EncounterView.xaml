@@ -163,6 +163,7 @@
                 <StackPanel>
                     <Button Name="ImportParticipantButton"
                             ToolTip="Import New"
+                            IsEnabled="False"
                             Content="{materialDesign:PackIcon Kind=Import, Size=22}" />
                     <Button Name="LoadParticipantButton"
                             ToolTip="Load Saved"

@@ -135,12 +135,12 @@
                               Spacing="8">
             <Button Name="SaveCharacterButton"
                     Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                    ToolTip="MaterialDesignFloatingActionMiniLightButton"
+                    ToolTip="Save"
                     Content="{materialDesign:PackIcon Kind=Floppy, Size={StaticResource IconSize}}"
                     />
             <Button Name="DeleteCharacterButton"
                     Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                    ToolTip="MaterialDesignFloatingActionMiniLightButton"
+                    ToolTip="Remove"
                     Background="MediumVioletRed"
                     BorderBrush="MediumVioletRed"
                     Content="{materialDesign:PackIcon Kind=Delete, Size={StaticResource IconSize}}"
