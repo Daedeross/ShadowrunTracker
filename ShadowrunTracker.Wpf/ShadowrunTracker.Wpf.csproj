@@ -14,10 +14,7 @@
     <PackageReference Include="MaterialDesignThemes.MahApps" Version="0.2.1" />
     <PackageReference Include="ModernWpfUI.MahApps" Version="0.9.4" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" Version="1.1.4">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" Version="1.1.4" PrivateAssets="all" />
     <PackageReference Include="ReactiveUI.WPF" Version="17.1.50" />
     <PackageReference Include="SharpVectors" Version="1.7.7" />
   </ItemGroup>
