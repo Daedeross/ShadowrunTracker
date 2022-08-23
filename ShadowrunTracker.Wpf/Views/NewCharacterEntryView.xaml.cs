@@ -39,21 +39,29 @@ namespace ShadowrunTracker.Wpf.Views
                 this.Bind(ViewModel, vm => vm.PainEditor, v => v.PainEditor.IsChecked)
                     .DisposeWith(d);
 
-                this.Bind(ViewModel, vm => vm.BaseBody, v => v.BaseBody.Value)
+                this.Bind(ViewModel, vm => vm.BaseBody, v => v.BaseBody.Value,
+                    x => x, x => (int)x)
                     .DisposeWith(d);
-                this.Bind(ViewModel, vm => vm.BaseAgility, v => v.BaseAgility.Value)
+                this.Bind(ViewModel, vm => vm.BaseAgility, v => v.BaseAgility.Value,
+                    x => x, x => (int)x)
                     .DisposeWith(d);
-                this.Bind(ViewModel, vm => vm.BaseReaction, v => v.BaseReaction.Value)
+                this.Bind(ViewModel, vm => vm.BaseReaction, v => v.BaseReaction.Value,
+                    x => x, x => (int)x)
                     .DisposeWith(d);
-                this.Bind(ViewModel, vm => vm.BaseStrength, v => v.BaseStrength.Value)
+                this.Bind(ViewModel, vm => vm.BaseStrength, v => v.BaseStrength.Value,
+                    x => x, x => (int)x)
                     .DisposeWith(d);
-                this.Bind(ViewModel, vm => vm.BaseCharisma, v => v.BaseCharisma.Value)
+                this.Bind(ViewModel, vm => vm.BaseCharisma, v => v.BaseCharisma.Value,
+                    x => x, x => (int)x)
                     .DisposeWith(d);
-                this.Bind(ViewModel, vm => vm.BaseIntuition, v => v.BaseIntuition.Value)
+                this.Bind(ViewModel, vm => vm.BaseIntuition, v => v.BaseIntuition.Value,
+                    x => x, x => (int)x)
                     .DisposeWith(d);
-                this.Bind(ViewModel, vm => vm.BaseLogic, v => v.BaseLogic.Value)
+                this.Bind(ViewModel, vm => vm.BaseLogic, v => v.BaseLogic.Value,
+                    x => x, x => (int)x)
                     .DisposeWith(d);
-                this.Bind(ViewModel, vm => vm.BaseWillpower, v => v.BaseWillpower.Value)
+                this.Bind(ViewModel, vm => vm.BaseWillpower, v => v.BaseWillpower.Value,
+                    x => x, x => (int)x)
                     .DisposeWith(d);
             });
         }

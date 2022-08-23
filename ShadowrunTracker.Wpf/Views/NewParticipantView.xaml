@@ -42,8 +42,8 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
-        <rxui:ViewModelViewHost Name="CharacterHost" />
-        <ListBox ItemsSource="{Binding Initiatives}" Grid.Row="2" >
+        <v:NewCharacterEntryView x:Name="CharacterHost" />
+        <ListBox Name="InitiativesList" ItemsSource="{Binding Initiatives}" Grid.Row="2" >
             <ListBox.Style>
                 <Style TargetType="ListBox" >
                     <Setter Property="KeyboardNavigation.TabNavigation" Value="Continue" />

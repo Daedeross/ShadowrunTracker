@@ -21,6 +21,15 @@ namespace ShadowrunTracker.Wpf.Views
             {
                 this.OneWayBind(ViewModel, vm => vm.Character, v => v.CharacterHost.ViewModel)
                     .DisposeWith(d);
+
+                this.OneWayBind(ViewModel, vm => vm.Initiatives, v => v.InitiativesList.ItemsSource)
+                    .DisposeWith(d);
+
+                this.BindCommand(ViewModel, vm => vm.OkCommand, v => v.okButton.Command)
+                    .DisposeWith(d);
+
+                this.BindCommand(ViewModel, vm => vm.CancelCommand, v => v.cancelButton.Command)
+                    .DisposeWith(d);
             });
         }
 
