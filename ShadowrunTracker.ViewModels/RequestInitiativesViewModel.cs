@@ -1,22 +1,23 @@
-﻿using DynamicData;
-using DynamicData.Binding;
-using ReactiveUI;
-using ShadowrunTracker.ViewModels.Internal;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Windows.Input;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using DynamicData;
+    using DynamicData.Binding;
+    using ReactiveUI;
+    using ShadowrunTracker.ViewModels.Internal;
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.Collections.Specialized;
+    using System.Linq;
+    using System.Reactive.Disposables;
+    using System.Reactive.Linq;
+    using System.Windows.Input;
+
     public class RequestInitiativesViewModel : ReusableModalViewModelBase<IEnumerable<ICharacterViewModel>, IEnumerable<IParticipantInitiativeViewModel>?>, IRequestInitiativesViewModel
     {
         private ObservableCollection<IPendingParticipantInitiativeViewModel> m_Participants;
-        private readonly ObservableCollection<ICharacterViewModel> _characters;
+        private readonly IDataStore<Guid> _store;
+        private readonly IObservableCollection<ICharacterViewModel> _characters;
 
         public ObservableCollection<IPendingParticipantInitiativeViewModel> Participants
         {
@@ -26,9 +27,11 @@ namespace ShadowrunTracker.ViewModels
 
         public ICommand RollAll { get; }
 
-        public RequestInitiativesViewModel(ObservableCollection<ICharacterViewModel> characters)
+        public RequestInitiativesViewModel(IDataStore<Guid> store, IObservableCollection<ICharacterViewModel> characters)
             : base(false)
         {
+            _store = store;
+
             m_Participants = new ObservableCollection<IPendingParticipantInitiativeViewModel>();
             _characters = characters;
             _characters.CollectionChanged += OnCharactersCollectionChanged;
@@ -60,7 +63,7 @@ namespace ShadowrunTracker.ViewModels
 
         protected override IEnumerable<IParticipantInitiativeViewModel> OkResult()
         {
-            return Participants.Select(p => p.ToParticipant());
+            return Participants.Select(p => p.ToParticipant(_store));
         }
 
         protected override IEnumerable<IParticipantInitiativeViewModel>? CancelResult()

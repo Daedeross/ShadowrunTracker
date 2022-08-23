@@ -1,18 +1,15 @@
-﻿using Castle.Facilities.TypedFactory;
-using Castle.MicroKernel.ModelBuilder.Inspectors;
-using Castle.MicroKernel.Registration;
-using Castle.MicroKernel.SubSystems.Configuration;
-using Castle.Windsor;
-using ShadowrunTracker.Utils;
-using ShadowrunTracker.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ShadowrunTracker.Wpf.Configuration
+﻿namespace ShadowrunTracker.Wpf.Configuration
 {
+    using Castle.Facilities.TypedFactory;
+    using Castle.MicroKernel.ModelBuilder.Inspectors;
+    using Castle.MicroKernel.Registration;
+    using Castle.MicroKernel.SubSystems.Configuration;
+    using Castle.Windsor;
+    using ShadowrunTracker.Utils;
+    using ShadowrunTracker.ViewModels;
+    using ShadowrunTracker.Wpf.Helpers;
+    using System.Linq;
+
     public class ApplicationInstaller : IWindsorInstaller
     {
         public void Install(IWindsorContainer container, IConfigurationStore store)
@@ -24,6 +21,7 @@ namespace ShadowrunTracker.Wpf.Configuration
             container.Kernel.ComponentModelBuilder.RemoveContributor(propInjector);
 
             container.AddFacility<TypedFactoryFacility>();
+            container.AddFacility<DataStoreFacility>();
 
             container.Register(
                 Classes.FromAssemblyNamed("ShadowrunTracker.ViewModels")
@@ -31,11 +29,17 @@ namespace ShadowrunTracker.Wpf.Configuration
                     .WithServiceDefaultInterfaces()
                     .LifestyleTransient(),
                 Component.For<IViewModelFactory>()
-                    .AsFactory());
+                    .AsFactory(),
+                Component.For<IDrawerManager>()
+                    .ImplementedBy<DrawerManager>()
+                    .LifestyleSingleton());
 
             container.Register(
                 Component.For<IRoller>()
                     .ImplementedBy<Roller>()
+                    .LifestyleSingleton(),
+                Component.For(typeof(IDataStore<>))
+                    .ImplementedBy(typeof(TypedDataStore<>))
                     .LifestyleSingleton());
 
             container.Register(

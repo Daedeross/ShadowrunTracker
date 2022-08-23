@@ -1,16 +1,13 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.ViewModels;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ShadowrunTracker.Wpf.Configuration
+﻿namespace ShadowrunTracker.Wpf.Configuration
 {
+    using ReactiveUI;
+    using ShadowrunTracker.ViewModels;
+    using System;
+    using System.Collections.Concurrent;
+    using System.Linq;
+    using System.Linq.Expressions;
+    using System.Reflection;
+
     internal class WindsorViewLocator : IViewLocator
     {
         private readonly IViewFactory _viewFactory;

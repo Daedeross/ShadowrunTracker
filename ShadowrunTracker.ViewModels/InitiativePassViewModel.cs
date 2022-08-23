@@ -1,26 +1,29 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.Model;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Text;
-using System.Windows.Input;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using ReactiveUI;
+    using ShadowrunTracker.Data;
+    using ShadowrunTracker.Model;
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.Collections.Specialized;
+    using System.ComponentModel;
+    using System.Linq;
+    using System.Reactive.Linq;
+    using System.Windows.Input;
+
     public class InitiativePassViewModel : ViewModelBase, IInitiativePassViewModel
     {
+        private readonly IDataStore<Guid> _store;
         private readonly List<IParticipantInitiativeViewModel> _acted;
         private readonly List<IParticipantInitiativeViewModel> _notActed;
         private readonly List<IParticipantInitiativeViewModel> _notActing;
 
-        public InitiativePassViewModel()
+        public InitiativePassViewModel(IDataStore<Guid> store)
         {
+            _store = store;
+
+            Id = Guid.NewGuid();
             Participants = new ObservableCollection<IParticipantInitiativeViewModel>();
 
             _acted = new List<IParticipantInitiativeViewModel>();
@@ -42,8 +45,11 @@ namespace ShadowrunTracker.ViewModels
             Participants.CollectionChanged += OnParcicipantsChanged;
         }
 
-        public InitiativePassViewModel(IEnumerable<IParticipantInitiativeViewModel> participants)
+        public InitiativePassViewModel(IDataStore<Guid> store, IEnumerable<IParticipantInitiativeViewModel> participants, Guid? id = null)
         {
+            _store = store;
+
+            Id = id ?? Guid.NewGuid();
             var sorted = participants.ToList();
             sorted.Sort(ParticipantInitiativeReverseComparer.Default);
 
@@ -69,6 +75,9 @@ namespace ShadowrunTracker.ViewModels
 
             Participants.CollectionChanged += OnParcicipantsChanged;
         }
+
+        public Guid Id { get; }
+        public int Index { get; set;  }
 
         public ObservableCollection<IParticipantInitiativeViewModel> Participants { get; }
 
@@ -150,6 +159,79 @@ namespace ShadowrunTracker.ViewModels
             {
                 if (e.PropertyName == nameof(IParticipantInitiativeViewModel.InitiativeScore))
                 {
+                }
+            }
+        }
+
+        public InitiativePass ToRecord()
+        {
+            return new InitiativePass
+            {
+                Id = Id,
+                Index = Index,
+                ParticipantIds = Participants.Select(p => p.Id).ToList(),
+                ActiveParticipantIndex = ActiveParticipant == null ? -1 : Participants.IndexOf(ActiveParticipant)
+            };
+        }
+
+        public void Update(InitiativePass record)
+        {
+            if (record.Id != Id)
+            {
+                throw new ArgumentException($"Record id does not match: ViewModel Id: {Id} | Record Id: {record.Id}", nameof(record));
+            }
+            UpdateParticipants(record.ParticipantIds);
+
+            ActiveParticipant = record.ActiveParticipantIndex >= 0
+                ? Participants[record.ActiveParticipantIndex]
+                : null;
+        }
+
+        private void UpdateParticipants(IEnumerable<Guid> incomming)
+        {
+            var oldIds = Participants.Select(p => p.Id).ToList();
+
+            var removed = oldIds.Except(incomming);
+            var added = incomming.Except(oldIds);
+
+            RemoveParticipantsById(removed);
+            AddParticipantsById(added);
+        }
+
+        private void RemoveParticipantsById(IEnumerable<Guid> ids)
+        {
+            if (ids.Any())
+            {
+                foreach (var id in ids)
+                {
+                    var vm = _store.TryGet<IParticipantInitiativeViewModel>(id);
+                    if (vm.HasValue)
+                    {
+                        RemoveParticipant(vm.Value);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"Id {id} not found in store");
+                    }
+                }
+            }
+        }
+
+        private void AddParticipantsById(IEnumerable<Guid> ids)
+        {
+            if (ids.Any())
+            {
+                foreach (var id in ids)
+                {
+                    var vm = _store.TryGet<IParticipantInitiativeViewModel>(id);
+                    if (vm.HasValue)
+                    {
+                        AddParticipant(vm.Value);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"Id {id} not found in _store");
+                    }
                 }
             }
         }

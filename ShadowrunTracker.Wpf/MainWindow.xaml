@@ -26,7 +26,20 @@
         <DataTemplate DataType="vmi:IRequestInitiativesViewModel">
             <local:RequestInitiativesView DataContext="{Binding}" />
         </DataTemplate>
-        
+        <Storyboard x:Key="MakeObjectHiddenAfterDelay">
+            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility"
+                                           Duration="0"
+                                           BeginTime="0:0:0.3">
+                <DiscreteObjectKeyFrame Value="{x:Static Visibility.Hidden}" />
+            </ObjectAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="MakeObjectVisibleImmediately">
+            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility"
+                                           Duration="0"
+                                           BeginTime="0:0:0">
+                <DiscreteObjectKeyFrame Value="{x:Static Visibility.Visible}" KeyTime="0:0:0" />
+            </ObjectAnimationUsingKeyFrames>
+        </Storyboard>
     </mah:MetroWindow.Resources>
     <mah:MetroWindow.RightWindowCommands>
         <mah:WindowCommands>
@@ -92,13 +105,100 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition />
             </Grid.RowDefinitions>
-            <rxui:ViewModelViewHost Name="EncounterHost"
-                                    Grid.Row="1"
-                                    HorizontalAlignment="Stretch"
-                                    VerticalContentAlignment="Stretch"
-                                    HorizontalContentAlignment="Stretch"
-                                    ViewModel="{Binding CurrentEncounter}" >
-            </rxui:ViewModelViewHost>
+
+            <materialDesign:DrawerHost Grid.Row="1" Name="EncounterDrawerHost"
+                                       OpenMode="Modal"
+                                       BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                       BottomDrawerCloseOnClickAway="True"
+                                       BottomDrawerCornerRadius="20 20 0 0"
+                                       >
+                <materialDesign:DrawerHost.Style>
+                    <Style TargetType="materialDesign:DrawerHost"
+                           BasedOn="{StaticResource {x:Type materialDesign:DrawerHost}}">
+                        <Setter Property="OverlayBackground"
+                                Value="{DynamicResource PrimaryHueLightBrush}" />
+                    </Style>
+                </materialDesign:DrawerHost.Style>
+                <materialDesign:DrawerHost.LeftDrawerContent>
+                    <Border>
+                        <Grid >
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Visibility" Value="Hidden" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsLeftDrawerOpen, RelativeSource={RelativeSource AncestorType=materialDesign:DrawerHost}, FallbackValue=False}"
+                                             Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Name="StartAction" Storyboard="{StaticResource MakeObjectVisibleImmediately}" />
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <BeginStoryboard Name="EndAction" Storyboard="{StaticResource MakeObjectHiddenAfterDelay}" />
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+                            <rxui:ViewModelViewHost Name="LeftDrawer"
+                                                    HorizontalAlignment="Stretch"
+                                                    VerticalAlignment="Stretch"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    VerticalContentAlignment="Stretch"
+                                                    />
+                        </Grid>
+                    </Border>
+                </materialDesign:DrawerHost.LeftDrawerContent>
+                <materialDesign:DrawerHost.BottomDrawerContent>
+                    <Grid HorizontalAlignment="Center" Margin="1" Background="{DynamicResource MaterialDesignPaper}">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="Visibility" Value="Hidden" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsBottomDrawerOpen, RelativeSource={RelativeSource AncestorType=materialDesign:DrawerHost}}"
+                                                 Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard Name="StartAction" Storyboard="{StaticResource MakeObjectVisibleImmediately}" />
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard Name="EndAction" Storyboard="{StaticResource MakeObjectHiddenAfterDelay}" />
+                                        </DataTrigger.ExitActions>
+                                        <!--<Setter Property="Visibility" Value="Visible" />-->
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        <rxui:ViewModelViewHost Name="BottomDrawerContent"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Stretch"
+                                                HorizontalContentAlignment="Center"
+                                                VerticalContentAlignment="Stretch"
+                                                />  
+                        <Border Height="100" />
+                        <!--<ToggleButton Name="CloseDrawer"
+                              VerticalAlignment="Top"
+                              HorizontalAlignment="Right"
+                              Grid.Row="0"
+                              ToolTip="Cancel"
+                              Width="42" Height="42"
+                              IsChecked="{Binding IsBottomDrawerOpen, RelativeSource={RelativeSource AncestorType=materialDesign:DrawerHost}}"
+                              Content="{materialDesign:PackIcon Kind=Plus, Size=22}"
+                              materialDesign:ToggleButtonAssist.OnContent="{materialDesign:PackIcon Kind=Cancel, Size=22}"
+                              >
+                    <ToggleButton.Style>
+                        <Style TargetType="ToggleButton" BasedOn="{StaticResource MaterialDesignActionAccentToggleButton}">
+                            <Setter Property="Margin" Value="0 -50 8 0" />
+                        </Style>
+                    </ToggleButton.Style>
+                </ToggleButton>-->
+                    </Grid>
+                </materialDesign:DrawerHost.BottomDrawerContent>
+                <rxui:ViewModelViewHost Name="EncounterHost"
+                                        VerticalAlignment="Stretch"
+                                        HorizontalAlignment="Stretch"
+                                        VerticalContentAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        ViewModel="{Binding CurrentEncounter}" >
+                </rxui:ViewModelViewHost>
+            </materialDesign:DrawerHost>
         </Grid>
     </materialDesign:DialogHost>
 </mah:MetroWindow>

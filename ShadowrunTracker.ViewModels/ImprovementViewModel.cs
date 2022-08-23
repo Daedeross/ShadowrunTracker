@@ -1,15 +1,14 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.Data;
-using ShadowrunTracker.Model;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using ReactiveUI;
+    using ShadowrunTracker;
+    using ShadowrunTracker.Data;
+    using ShadowrunTracker.Model;
+    using System;
+
     public class ImprovementViewModel : ReactiveObject, IImprovementViewModel
     {
-        public ImprovementViewModel(IImprovement improvement)
+        public ImprovementViewModel(Improvement improvement)
         {
             m_Name = improvement.Name;
             m_TargetKind = improvement.TargetKind;
@@ -43,6 +42,21 @@ namespace ShadowrunTracker.ViewModels
         {
             get => m_Value;
             set => this.RaiseAndSetIfChanged(ref m_Value, value);
+        }
+
+        public Guid Id => throw new NotImplementedException();
+
+        public Improvement ToRecord()
+        {
+            return this.ToModel();
+        }
+
+        public void Update(Improvement record)
+        {
+            Name = record.Name;
+            TargetKind = record.TargetKind;
+            Target = record.Target;
+            Value = record.Value;
         }
     }
 }

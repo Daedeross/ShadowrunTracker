@@ -1,12 +1,14 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.Data;
-using ShadowrunTracker.Model;
-
-namespace ShadowrunTracker.ViewModels.Traits
+﻿namespace ShadowrunTracker.ViewModels.Traits
 {
+    using ReactiveUI;
+    using ShadowrunTracker;
+    using ShadowrunTracker.Data.Traits;
+    using ShadowrunTracker.Model;
+    using System;
+
     public class SkillViewModel : LeveledTraitViewModel, ISkillViewModel
     {
-        public SkillViewModel(ISkill skill)
+        public SkillViewModel(Skill skill)
             : base(skill)
         {
             _linkedAttribute = skill.LinkedAttribute;
@@ -17,6 +19,17 @@ namespace ShadowrunTracker.ViewModels.Traits
         {
             get => _linkedAttribute;
             set => this.RaiseAndSetIfChanged(ref _linkedAttribute, value);
+        }
+
+        public Skill ToRecord()
+        {
+            return this.ToModel();
+        }
+
+        public void Update(Skill record)
+        {
+            base.Update(record);
+            LinkedAttribute = record.LinkedAttribute;
         }
     }
 }

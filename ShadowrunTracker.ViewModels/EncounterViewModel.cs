@@ -1,18 +1,23 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.Data;
-using ShadowrunTracker.Model;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Windows.Input;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using DynamicData;
+    using DynamicData.Binding;
+    using ReactiveUI;
+    using ShadowrunTracker.Data;
+    using ShadowrunTracker.Model;
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.Linq;
+    using System.Reactive;
+    using System.Reactive.Disposables;
+    using System.Windows.Input;
+
     public class EncounterViewModel : ViewModelBase, IEncounterViewModel
     {
         private readonly IViewModelFactory _viewModelFactory;
+        private readonly IDataStore<Guid> _store;
+
         private readonly SerialDisposable _requestSubscription;
         private readonly SerialDisposable _newParticipantSubscription;
 
@@ -22,9 +27,12 @@ namespace ShadowrunTracker.ViewModels
         /// </summary>
         private readonly List<ICharacterViewModel> _removedParticipants = new List<ICharacterViewModel>();
 
-        public EncounterViewModel(IViewModelFactory viewModelFactory)
+        public EncounterViewModel(IViewModelFactory viewModelFactory, IDataStore<Guid> store, Guid? id = null)
         {
             _viewModelFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
+            _store = store;
+
+            Id = id ?? Guid.NewGuid();
 
             NextRoundCommand = ReactiveCommand.Create(() => NextRound());
             NewParticipantCommand = ReactiveCommand.Create<ImportMode>(NewParticipant, outputScheduler: RxApp.MainThreadScheduler);
@@ -32,16 +40,16 @@ namespace ShadowrunTracker.ViewModels
             RequestInitiatives = new Interaction<IEnumerable<ICharacterViewModel>, IEnumerable<IParticipantInitiativeViewModel>>();
             GetNewCharacter = new Interaction<ImportMode, ICharacterViewModel>();
 
-            _requestSubscription = new SerialDisposable();
-            _disposables.Add(_requestSubscription);
+            _requestSubscription = new SerialDisposable()
+                .DisposeWith(_disposables);
 
-            _newParticipantSubscription = new SerialDisposable();
-            _disposables.Add(_newParticipantSubscription);
+            _newParticipantSubscription = new SerialDisposable()
+                .DisposeWith(_disposables);
         }
 
-        public ObservableCollection<ICharacterViewModel> Participants { get; } = new ObservableCollection<ICharacterViewModel>();
+        public IObservableCollection<ICharacterViewModel> Participants { get; } = new ObservableCollectionExtended<ICharacterViewModel>();
 
-        public ObservableCollection<ICombatRoundViewModel> Rounds { get; } = new ObservableCollection<ICombatRoundViewModel>();
+        public IObservableCollection<ICombatRoundViewModel> Rounds { get; } = new ObservableCollectionExtended<ICombatRoundViewModel>();
 
         public Interaction<IEnumerable<ICharacterViewModel>, IEnumerable<IParticipantInitiativeViewModel>> RequestInitiatives { get; }
 
@@ -64,10 +72,15 @@ namespace ShadowrunTracker.ViewModels
                     CurrentRound?.AddParticipant(character, initiative, addToPass, acted);
                 }
                 character.Remove += OnRemoveCharacter;
+
+                if (character is IDisposable disposable)
+                {
+                    _disposables.Add(disposable);
+                }
             }
         }
 
-        public void AddParticipant(ICharacter character, InitiativeRoll? initiative = null, bool addToPass = false, bool acted = false)
+        public void AddParticipant(Character character, InitiativeRoll? initiative = null, bool addToPass = false, bool acted = false)
         {
             AddParticipant(_viewModelFactory.Create(character), initiative, addToPass, acted);
         }
@@ -124,11 +137,85 @@ namespace ShadowrunTracker.ViewModels
 
         public ICommand NewParticipantCommand { get; }
 
+        public Guid Id { get; }
+
         private void NewParticipant(ImportMode mode)
         {
             _newParticipantSubscription.Disposable = GetNewCharacter
                 .Handle(mode)
                 .Subscribe(p => AddParticipant(p));
         }
+
+        #region IRecordViewModel Implementation
+
+        public Encounter ToRecord()
+        {
+#pragma warning disable CS8604 // Possible null reference argument.
+            return new Encounter
+            {
+                Id = Id,
+                Participants = Participants.Select(c => c.ToRecord()).ToList(),
+                Rounds = Rounds.Select(r => r.ToRecord()).ToList(),
+                CurrentRoundIndex = Rounds.IndexOf(CurrentRound)
+            };
+#pragma warning restore CS8604 // Possible null reference argument.
+        }
+
+        public void Update(Encounter record)
+        {
+            UpdateParticipants(record.Participants);
+        }
+        private void UpdateParticipants(IEnumerable<Character> incomming)
+        {
+            var oldMap = Participants.ToDictionary(p => p.Id);
+            var newMap = incomming.ToDictionary(p => p.Id);;
+
+            var removed = oldMap.Values.Where(vm => !newMap.ContainsKey(vm.Id));
+            var added = newMap.Values.Where(record => !oldMap.ContainsKey(record.Id));
+            var update = newMap.Join(oldMap, kvp => kvp.Key, kvp => kvp.Key, (inc, old) => (inc.Value, old.Value));
+
+            RemoveParticipants(removed);
+
+            foreach (var (record, viewModel) in update)
+            {
+                viewModel.Update(record);
+            }
+
+            AddParticipantsFromRecords(added);
+        }
+
+        private void RemoveParticipants(IEnumerable<ICharacterViewModel> vms)
+        {
+            if (vms.Any())
+            {
+                foreach (var vm in vms)
+                {
+                    RemoveParticipant(vm);
+                }
+            }
+        }
+
+        private void AddParticipantsFromRecords(IEnumerable<Character> records)
+        {
+            if (records.Any())
+            {
+                foreach (var participant in records)
+                {
+                    var vm = _store.TryGet<ICharacterViewModel>(participant.Id);
+                    if (vm.HasValue)
+                    {
+                        AddParticipant(vm.Value);
+                        vm.Value.Update(participant);
+                    }
+                    else
+                    {
+                        var charVm = _viewModelFactory.Create(participant);
+                        AddParticipant(charVm);
+                    }
+                }
+            }
+        }
+
+        #endregion
     }
 }

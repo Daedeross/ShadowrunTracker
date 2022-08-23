@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ShadowrunTracker.Data\ShadowrunTracker.Data.csproj" />
+    <ProjectReference Include="..\ShadowrunTracker.Mock\ShadowrunTracker.Mock.csproj" />
     <ProjectReference Include="..\ShadowrunTracker.Utils\ShadowrunTracker.Utils.csproj" />
     <ProjectReference Include="..\ShadowrunTracker.ViewModels\ShadowrunTracker.ViewModels.csproj" />
   </ItemGroup>

@@ -1,5 +1,6 @@
 ﻿using ShadowrunTracker.Data;
 using ShadowrunTracker.Data.Traits;
+using ShadowrunTracker.Mock.TestData;
 using ShadowrunTracker.Utils;
 using ShadowrunTracker.ViewModels;
 using System;
@@ -13,7 +14,7 @@ namespace ShadowrunTracker.Tests
 {
     public class CharacterViewModelTests
     {
-        private ICharacter CreateLoader()
+        private Character CreateLoader()
         {
             return new Character
             {
@@ -34,19 +35,19 @@ namespace ShadowrunTracker.Tests
                 PainEditor = false,
                 PainResistence = 1,
                 SpellsSustained = 0,
-                Skills = new List<ISkill>
+                Skills = new List<Skill>
                 {
                     new Skill
                     {
                         Name = "DoThing1",
                         LinkedAttribute = Model.SR5Attribute.Agility,
-                        Rating = 2
+                        BaseRating = 2
                     },
                     new Skill
                     {
                         Name = "DoThing2",
                         LinkedAttribute = Model.SR5Attribute.Charisma,
-                        Rating = 4
+                        BaseRating = 4
                     }
                 }
             };
@@ -58,7 +59,7 @@ namespace ShadowrunTracker.Tests
         public void CharacterCreatedFromLoaderTest()
         {
             var character = CreateLoader();
-            var vm = new CharacterViewModel(new Roller(), character);
+            var vm = new CharacterViewModel(new Roller(), TestCharacters.DataStore, character);
 
             Assert.Equal(character.Essence, vm.Essence);
             Assert.Equal(character.Player, vm.Player);
@@ -82,7 +83,7 @@ namespace ShadowrunTracker.Tests
                 Value = 1
             });
 
-            var vm = new CharacterViewModel(new Roller(), character);
+            var vm = new CharacterViewModel(new Roller(), TestCharacters.DataStore, character);
 
             Assert.Equal(character.Essence, vm.Essence);
             Assert.Equal(character.Player, vm.Player);
@@ -106,7 +107,7 @@ namespace ShadowrunTracker.Tests
                 Value = 1
             };
 
-            var vm = new CharacterViewModel(new Roller(), character);
+            var vm = new CharacterViewModel(new Roller(), TestCharacters.DataStore, character);
 
             vm.Improvements.Add(new ImprovementViewModel(improvement));
 

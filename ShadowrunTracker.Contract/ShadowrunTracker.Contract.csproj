@@ -7,8 +7,4 @@
     <RootNamespace>ShadowrunTracker</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="ReactiveUI" Version="17.1.50" />
-  </ItemGroup>
-
 </Project>

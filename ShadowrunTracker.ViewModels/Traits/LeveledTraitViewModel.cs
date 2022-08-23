@@ -1,15 +1,21 @@
-﻿using ShadowrunTracker.Model;
-using ShadowrunTracker.Data;
-using ShadowrunTracker.Utils;
-
-namespace ShadowrunTracker.ViewModels.Traits
+﻿namespace ShadowrunTracker.ViewModels.Traits
 {
+    using ReactiveUI;
+    using ShadowrunTracker.Data.Traits;
+    using ShadowrunTracker.Utils;
+    using System.Reactive.Disposables;
+
     public class LeveledTraitViewModel : TraitViewModel, ILeveledTraitViewModel
     {
-        public LeveledTraitViewModel(ILeveledTrait trait)
+        public LeveledTraitViewModel(LeveledTrait trait)
             : base(trait)
         {
-            m_BaseRating = trait.Rating;
+            m_BaseRating = trait.BaseRating;
+            m_BonusRating = trait.BonusRating;
+
+            _augmentedRating = this.WhenAnyValue(x => x.BaseRating, x => x.BonusRating, (baseRating, bonusRating) => baseRating + bonusRating)
+                .ToProperty(this, x => x.AugmentedRating)
+                .DisposeWith(_disposables);
         }
 
         private int m_BaseRating;
@@ -26,8 +32,14 @@ namespace ShadowrunTracker.ViewModels.Traits
             set => this.SetAndRaiseIfChanged(ref m_BonusRating, value);
         }
 
-        [DependsOn(nameof(BaseRating))]
-        [DependsOn(nameof(BonusRating))]
-        public int AugmentedRating => m_BaseRating + m_BonusRating;
+        private ObservableAsPropertyHelper<int> _augmentedRating;
+        public int AugmentedRating => _augmentedRating.Value;
+
+        protected void Update(LeveledTrait record)
+        {
+            base.Update(record);
+            BaseRating = record.BaseRating;
+            BonusRating = record.BonusRating;
+        }
     }
 }

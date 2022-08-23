@@ -17,6 +17,17 @@ namespace ShadowrunTracker.Utils
                 source.Add(item);
             }
         }
+
+        public static void SortBy<TSource>(this ObservableCollection<TSource> source, Func<TSource, IComparable> keySelector)
+        {
+            var list = source.OrderBy(keySelector);
+            source.Clear();
+            foreach (var item in list)
+            {
+                source.Add(item);
+            }
+        }
+
         public static IEnumerable<T> TakeUntilIncluding<T>(this IEnumerable<T> list, Func<T, bool> predicate)
         {
             foreach (T el in list)

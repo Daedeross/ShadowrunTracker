@@ -1,41 +1,33 @@
 ﻿#nullable disable
 
-using MahApps.Metro.Controls;
-using MaterialDesignThemes.Wpf;
-using ReactiveMarbles.ObservableEvents;
-using ReactiveUI;
-using ShadowrunTracker.Data;
-using ShadowrunTracker.Model;
-using ShadowrunTracker.Utils;
-using ShadowrunTracker.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-
 namespace ShadowrunTracker.Wpf
 {
+    using MahApps.Metro.Controls;
+    using MaterialDesignThemes.Wpf;
+    using ReactiveMarbles.ObservableEvents;
+    using ReactiveUI;
+    using ShadowrunTracker.Data;
+    using ShadowrunTracker.Model;
+    using ShadowrunTracker.Utils;
+    using ShadowrunTracker.ViewModels;
+    using System;
+    using System.Collections.Concurrent;
+    using System.IO;
+    using System.Linq;
+    using System.Reactive;
+    using System.Reactive.Disposables;
+    using System.Reactive.Linq;
+    using System.Text.Json;
+    using System.Windows;
+    using System.Windows.Controls;
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : MetroWindow, IViewFor<IWorkspaceViewModel>
     {
         private readonly IViewModelFactory _viewModelFactory;
+        private IDrawerManager _drawerManager;
 
         public IWorkspaceViewModel ViewModel
         {
@@ -52,12 +44,13 @@ namespace ShadowrunTracker.Wpf
             set => ViewModel = (IWorkspaceViewModel)value;
         }
 
-        public MainWindow(IWorkspaceViewModel viewModel, IViewModelFactory viewModelFactory)
+        public MainWindow(IWorkspaceViewModel viewModel, IViewModelFactory viewModelFactory, IDrawerManager drawerManager)
         {
             InitializeComponent();
 
             ViewModel = viewModel;
             _viewModelFactory = viewModelFactory;
+            _drawerManager = drawerManager;
 
             //requestInitiatives.DataContext = new Mock.MockRequestInitiativesViewModel();
 
@@ -67,6 +60,26 @@ namespace ShadowrunTracker.Wpf
                     .DisposeWith(d);
 
                 this.OneWayBind(ViewModel, vm => vm.CurrentEncounter, c => c.EncounterHost.ViewModel)
+                    .DisposeWith(d);
+
+                //this.OneWayBind(_drawerManager, m => m.LeftDrawerVisible, v => v.EncounterDrawerHost.IsLeftDrawerOpen, x =>
+                //{
+                //    return x;
+                //}).DisposeWith(d);
+                //this.OneWayBind(_drawerManager, m => m.LeftDrawerContext, v => v.LeftDrawer.ViewModel);
+
+                this.WhenAnyValue(v => v._drawerManager.BottomDrawerVisible)
+                    .Subscribe(b => EncounterDrawerHost.IsBottomDrawerOpen = b)
+                    .DisposeWith(d);
+
+                this.WhenAnyValue(v => v._drawerManager.BottomDrawerContext)
+                    .Subscribe(vm => BottomDrawerContent.ViewModel = vm)
+                    .DisposeWith(d);
+
+                EncounterDrawerHost.Events()
+                    .DrawerClosing
+                    .Do(a => CancelDockModal(a.Dock))
+                    .Subscribe(x => { })
                     .DisposeWith(d);
 
                 Interactions.ConfirmationRequest
@@ -165,7 +178,7 @@ namespace ShadowrunTracker.Wpf
             }
         }
 
-        private ICharacter LoadCharacter()
+        private Character LoadCharacter()
         {
             try
             {
@@ -193,6 +206,10 @@ namespace ShadowrunTracker.Wpf
 
                 return null;
             }
+        }
+        private void CancelDockModal(Dock dock)
+        {
+            _drawerManager.CancelDrawer(dock);
         }
     }
 }

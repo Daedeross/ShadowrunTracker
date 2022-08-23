@@ -1,12 +1,10 @@
-﻿using Castle.Core;
-using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Windows.Input;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using ReactiveUI;
+    using System;
+    using System.Reactive.Disposables;
+    using System.Windows.Input;
+
     public class WorkspaceViewModel : ViewModelBase, IWorkspaceViewModel
     {
         private readonly IViewModelFactory _viewModelFactory;
@@ -24,16 +22,25 @@ namespace ShadowrunTracker.ViewModels
         {
             _viewModelFactory = viewModelFactory;
 
-            var newEncounter = ReactiveCommand.Create(NewEncounterExecute);
-
-            _disposables.Add(newEncounter);
-
-            NewEncounter = newEncounter;
+            NewEncounter = ReactiveCommand.Create(NewEncounterExecute)
+                .DisposeWith(_disposables);
         }
 
         private void NewEncounterExecute()
         {
-            CurrentEncounter = _viewModelFactory.Create<IEncounterViewModel>();
+            var encounter = _viewModelFactory.Create<IEncounterViewModel>();
+            if (encounter is IDisposable disposable)
+            {
+                _disposables.Add(disposable);
+            }
+
+            if (CurrentEncounter is IDisposable oldEncounter)
+            {
+                _disposables.Remove(oldEncounter);
+                oldEncounter.Dispose();
+            }
+
+            CurrentEncounter = encounter;
         }
     }
 }

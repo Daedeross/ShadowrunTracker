@@ -1,21 +1,21 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.Data;
-using ShadowrunTracker.Model;
-using ShadowrunTracker.Utils;
-using ShadowrunTracker.ViewModels.Internal;
-using ShadowrunTracker.ViewModels.Traits;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Windows.Input;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using ReactiveUI;
+    using ShadowrunTracker.Data;
+    using ShadowrunTracker.Data.Traits;
+    using ShadowrunTracker.Model;
+    using ShadowrunTracker.Utils;
+    using ShadowrunTracker.ViewModels.Internal;
+    using ShadowrunTracker.ViewModels.Traits;
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.Collections.Specialized;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
+    using System.Reactive.Disposables;
+    using System.Windows.Input;
+
     public class CharacterViewModel : CanRequestConfirmationBase, ICharacterViewModel
     {
         public const int BlitzDice = 5;
@@ -28,6 +28,7 @@ namespace ShadowrunTracker.ViewModels
         public const int PenaltyPerSpell = -2;
 
         private readonly Dictionary<IImprovementViewModel, BonusHandler> _bonusHandlers;
+        private readonly IDataStore<Guid> _store;
 
         private string? _filename;
 
@@ -39,32 +40,33 @@ namespace ShadowrunTracker.ViewModels
 
         public bool IsChanged { get; set; }
 
-        public CharacterViewModel(IRoller roller)
+        public CharacterViewModel(IRoller roller, IDataStore<Guid> store)
         {
             _roller = roller ?? throw new ArgumentNullException(nameof(roller));
+            _store = store;
 
-            _id        = Guid.NewGuid();
-            m_Alias    = string.Empty;
+            _id = Guid.NewGuid();
+            m_Alias = string.Empty;
             m_IsPlayer = false;
-            m_Player   = string.Empty;
+            m_Player = string.Empty;
 
             m_Essence = 6m;
 
-            m_BaseBody      = 1;
-            m_BaseAgility   = 1;
-            m_BaseReaction  = 1;
-            m_BaseStrength  = 1;
-            m_BaseCharisma  = 1;
+            m_BaseBody = 1;
+            m_BaseAgility = 1;
+            m_BaseReaction = 1;
+            m_BaseStrength = 1;
+            m_BaseCharisma = 1;
             m_BaseIntuition = 1;
-            m_BaseLogic     = 1;
+            m_BaseLogic = 1;
             m_BaseWillpower = 1;
 
-            m_BaseEdge      = 1;
-            m_BaseMagic     = 0;
+            m_BaseEdge = 1;
+            m_BaseMagic = 0;
             m_BaseResonance = 0;
 
-            m_PainEditor      = false;
-            m_PainResistence  = 0;
+            m_PainEditor = false;
+            m_PainResistence = 0;
             m_SpellsSustained = 0;
 
             Skills = new ObservableCollection<ISkillViewModel>();
@@ -80,35 +82,41 @@ namespace ShadowrunTracker.ViewModels
                 .DisposeWith(_disposables);
         }
 
-        public CharacterViewModel(IRoller roller, ICharacter loader)
+        public CharacterViewModel(IRoller roller, IDataStore<Guid> store, [NotNull] Character loader)
         {
-            _roller = roller ?? throw new ArgumentNullException(nameof(roller));
+            if (loader is null)
+            {
+                throw new ArgumentNullException(nameof(loader));
+            }
 
-            _id        = loader.Id == Guid.Empty ? Guid.NewGuid() : loader.Id;
-            m_Alias    = loader.Alias;
+            _roller = roller ?? throw new ArgumentNullException(nameof(roller));
+            _store = store;
+
+            _id = loader.Id == Guid.Empty ? Guid.NewGuid() : loader.Id;
+            m_Alias = loader.Alias ?? string.Empty;
             m_IsPlayer = loader.IsPlayer;
-            m_Player   = loader.Player;
+            m_Player = loader.Player ?? string.Empty;
 
             m_Essence = loader.Essence;
 
-            m_BaseBody      = loader.BaseBody;
-            m_BaseAgility   = loader.BaseAgility;
-            m_BaseReaction  = loader.BaseReaction;
-            m_BaseStrength  = loader.BaseStrength;
-            m_BaseCharisma  = loader.BaseCharisma;
+            m_BaseBody = loader.BaseBody;
+            m_BaseAgility = loader.BaseAgility;
+            m_BaseReaction = loader.BaseReaction;
+            m_BaseStrength = loader.BaseStrength;
+            m_BaseCharisma = loader.BaseCharisma;
             m_BaseIntuition = loader.BaseIntuition;
-            m_BaseLogic     = loader.BaseLogic;
+            m_BaseLogic = loader.BaseLogic;
             m_BaseWillpower = loader.BaseWillpower;
 
-            m_BaseEdge      = loader.Edge;
-            m_BaseMagic     = loader.Magic;
+            m_BaseEdge = loader.Edge;
+            m_BaseMagic = loader.Magic;
             m_BaseResonance = loader.Resonance;
 
-            m_PainEditor      = loader.PainEditor;
-            m_PainResistence  = loader.PainResistence;
+            m_PainEditor = loader.PainEditor;
+            m_PainResistence = loader.PainResistence;
             m_SpellsSustained = loader.SpellsSustained;
 
-            Skills       = new ObservableCollection<ISkillViewModel>(loader.Skills.Select(s => (ISkillViewModel)new SkillViewModel(s)));
+            Skills = new ObservableCollection<ISkillViewModel>(loader.Skills.Select(s => (ISkillViewModel)new SkillViewModel(s)));
             Improvements = new ObservableCollection<IImprovementViewModel>(loader.Improvements.Select(i => (IImprovementViewModel)new ImprovementViewModel(i)));
             Improvements.CollectionChanged += OnImprovementsChanged;
             _bonusHandlers = Improvements.ToDictionary(
@@ -138,7 +146,7 @@ namespace ShadowrunTracker.ViewModels
                 foreach (IImprovementViewModel item in e.NewItems)
                 {
                     _bonusHandlers.Add(item, new BonusHandler(this, item));
-                } 
+                }
             }
         }
 
@@ -815,9 +823,119 @@ namespace ShadowrunTracker.ViewModels
                 .DisposeWith(_disposables);
         }
 
-        public ICharacter ToRecord()
+        public Character ToRecord()
         {
             return this.ToModel();
+        }
+
+        public void Update(Character record)
+        {
+            if (record.Id != Id)
+            {
+                throw new ArgumentException("Record and VM Ids do not match");
+            }
+
+            Alias = record.Alias ?? string.Empty;
+            IsPlayer = record.IsPlayer;
+            Player = record.Player ?? string.Empty;
+            Essence = record.Essence;
+            BaseBody = record.BaseBody;
+            BaseAgility = record.BaseAgility;
+            BaseReaction = record.BaseReaction;
+            BaseStrength = record.BaseStrength;
+            BaseCharisma = record.BaseCharisma;
+            BaseIntuition = record.BaseIntuition;
+            BaseLogic = record.BaseLogic;
+            BaseWillpower = record.BaseWillpower;
+            m_BaseEdge = record.Edge;
+            m_BaseMagic = record.Magic;
+            m_BaseResonance = record.Resonance;
+            PainEditor = record.PainEditor;
+            PainResistence = record.PainResistence;
+            SpellsSustained = record.SpellsSustained;
+            UpdateSkills(record.Skills);
+            UpdateImprovements(record.Improvements);
+        }
+
+        private void UpdateSkills(IEnumerable<Skill> incomming)
+        {
+            var oldMap = Skills.ToDictionary(p => p.Id);
+            var newMap = incomming.ToDictionary(p => p.Id); ;
+
+            var removed = oldMap.Values.Where(vm => !newMap.ContainsKey(vm.Id));
+            var added = newMap.Values.Where(record => !oldMap.ContainsKey(record.Id));
+            var update = newMap.Join(oldMap, kvp => kvp.Key, kvp => kvp.Key, (inc, old) => (inc.Value, old.Value));
+
+            RemoveSkills(removed);
+
+            foreach (var (record, viewModel) in update)
+            {
+                viewModel.Update(record);
+            }
+
+            AddSkillsFromRecords(added);
+        }
+
+        private void AddSkillsFromRecords(IEnumerable<Skill> added)
+        {
+            if (added.Any())
+            {
+                foreach (var record in added)
+                {
+                    Skills.Add(_store.CreateOrUpdate(record, s => new SkillViewModel(s)));
+                }
+            }
+        }
+
+        private void RemoveSkills(IEnumerable<ISkillViewModel> removed)
+        {
+            if (removed.Any())
+            {
+                foreach (var vm in removed)
+                {
+                    Skills.Remove(vm);
+                }
+            }
+        }
+        private void UpdateImprovements(IEnumerable<Improvement> incomming)
+        {
+            var oldMap = Improvements.ToDictionary(p => p.Id);
+            var newMap = incomming.ToDictionary(p => p.Id); ;
+
+            var removed = oldMap.Values.Where(vm => !newMap.ContainsKey(vm.Id));
+            var added = newMap.Values.Where(record => !oldMap.ContainsKey(record.Id));
+            var update = newMap.Join(oldMap, kvp => kvp.Key, kvp => kvp.Key, (inc, old) => (inc.Value, old.Value));
+
+            RemoveImprovements(removed);
+
+            foreach (var (record, viewModel) in update)
+            {
+                viewModel.Update(record);
+            }
+
+            AddImprovementsFromRecords(added);
+        }
+
+        private void AddImprovementsFromRecords(IEnumerable<Improvement> added)
+        {
+            if (added.Any())
+            {
+                foreach (var record in added)
+                {
+                    Improvements.Add(_store.CreateOrUpdate(record, s => new ImprovementViewModel(s)));
+                }
+            }
+        }
+
+        private void RemoveImprovements(IEnumerable<IImprovementViewModel> removed)
+        {
+            if (removed.Any())
+            {
+                foreach (var vm in removed)
+                {
+                    Improvements.Remove(vm);
+                }
+            }
         }
 
         #endregion

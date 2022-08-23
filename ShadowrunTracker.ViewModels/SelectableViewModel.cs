@@ -1,10 +1,7 @@
-﻿using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using ReactiveUI;
+
     public class SelectableViewModel<T> : ViewModelBase, ISelectableViewModel<T>
     {
         private T? m_ViewModel;

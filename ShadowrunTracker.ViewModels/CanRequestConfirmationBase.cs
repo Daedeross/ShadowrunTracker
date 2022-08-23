@@ -1,10 +1,10 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.Utils;
-using System;
-using System.Reactive.Disposables;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using ReactiveUI;
+    using ShadowrunTracker.Utils;
+    using System;
+    using System.Reactive.Disposables;
+
     public class CanRequestConfirmationBase : ViewModelBase, ICanRequestConfirmation
     {
         protected readonly SerialDisposable _confirmationSubscription;

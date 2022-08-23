@@ -1,4 +1,5 @@
-﻿using ShadowrunTracker.Data;
+﻿using DynamicData.Binding;
+using ShadowrunTracker.Data;
 using ShadowrunTracker.Model;
 using ShadowrunTracker.Utils;
 using ShadowrunTracker.ViewModels;
@@ -10,22 +11,22 @@ namespace ShadowrunTracker.Mock
 {
     public class MockViewModelFactory : IViewModelFactory
     {
-        public ICharacterViewModel Create(ICharacter character)
+        public ICharacterViewModel Create(Character character)
         {
-            return new CharacterViewModel(Roller.Default, character);
+            return new CharacterViewModel(Roller.Default, TestData.TestCharacters.DataStore, character);
         }
 
         public IParticipantInitiativeViewModel Create(ICharacterViewModel character, InitiativeRoll initiative)
         {
-            return new ParticipantInitiativeViewModel(character, initiative);
+            return new ParticipantInitiativeViewModel(TestData.TestCharacters.DataStore, character, initiative);
         }
 
         public IInitiativePassViewModel CreatePass(IEnumerable<IParticipantInitiativeViewModel> participants)
         {
-            return new InitiativePassViewModel(participants);
+            return new InitiativePassViewModel(TestData.TestCharacters.DataStore, participants);
         }
 
-        public IRequestInitiativesViewModel Create(IEnumerable<ICharacterViewModel> participants)
+        public IRequestInitiativesViewModel Create(IObservableCollection<ICharacterViewModel> characters)
         {
             throw new NotImplementedException();
         }
@@ -35,7 +36,7 @@ namespace ShadowrunTracker.Mock
             throw new NotImplementedException();
         }
 
-        public ICombatRoundViewModel CreateRound(IEnumerable<IParticipantInitiativeViewModel> participants)
+        public ICombatRoundViewModel CreateRound(IEnumerable<IParticipantInitiativeViewModel> characters)
         {
             return new MockCombatRoundViewModel();
         }

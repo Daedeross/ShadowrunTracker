@@ -1,13 +1,11 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.Data;
-using ShadowrunTracker.Model;
-using ShadowrunTracker.ViewModels.Traits;
-using System;
-using System.Collections.Generic;
-using System.Windows.Input;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using ReactiveUI;
+    using ShadowrunTracker.Model;
+    using ShadowrunTracker.ViewModels.Traits;
+    using System;
+    using System.Collections.Generic;
+
     public class NewCharacterViewModel : ReusableModalViewModelBase<ICharacterViewModel?>, INewCharacterViewModel
     {
         private static IReadOnlyCollection<IInitiativeScoreViewModel> DefaultInitiatives()
@@ -66,8 +64,9 @@ namespace ShadowrunTracker.ViewModels
 
         protected override void OnStart()
         {
-
+            Character = _viewModelFactory.Create<ICharacterViewModel>();
         }
+
         protected override ICharacterViewModel? OkResult()
         {
             SetInitiatives();
@@ -76,12 +75,15 @@ namespace ShadowrunTracker.ViewModels
 
         protected override ICharacterViewModel? CancelResult()
         {
+            if (Character != null)
+            {
+                _viewModelFactory.Release(Character);
+            }
             return default;
         }
 
         protected override void OnReset()
         {
-            Character = _viewModelFactory.Create<ICharacterViewModel>();
             this.RaisePropertyChanging(nameof(Initiatives));
             Initiatives = DefaultInitiatives();
             this.RaisePropertyChanged(nameof(Initiatives));
