@@ -2,10 +2,10 @@
 {
     using ShadowrunTracker.Model;
     using System;
-    using System.Collections;
     using System.Collections.Generic;
+    using System.Collections.Specialized;
 
-    public interface IDataStore<TKey>
+    public interface IDataStore<TKey> : INotifyCollectionChanged
         where TKey : IEquatable<TKey>
     {
         ConditionalValue<T> TryGet<T>(TKey key);

@@ -4,7 +4,7 @@
 
     public interface IViewFactory
     {
-        IViewFor<T> For<T>()
+        IViewFor<T> For<T>(string? viewName)
             where T : class;
     }
 }

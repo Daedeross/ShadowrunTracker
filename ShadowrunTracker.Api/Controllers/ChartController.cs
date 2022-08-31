@@ -11,10 +11,10 @@
     [ApiController]
     public class ChartController : ControllerBase
     {
-        private readonly IHubContext<ChartHub> _hub;
+        private readonly IHubContext<ChartHub, IChartClient> _hub;
         private readonly TimerManager _timer;
 
-        public ChartController(IHubContext<ChartHub> hub, TimerManager timer)
+        public ChartController(IHubContext<ChartHub, IChartClient> hub, TimerManager timer)
         {
             _hub = hub;
             _timer = timer;
@@ -25,10 +25,10 @@
         {
             if (!_timer.IsTimerStarted)
             {
-                _timer.PrepareTimer(() => _hub.Clients.All.SendAsync("TransferChartData", DataManager.GetData()));
+                _timer.PrepareTimer(() => _hub.Clients.All.TransferChartData(DataManager.GetData()));
             }
 
-            return Ok(new { Message = "Request Completer" });
+            return Ok(new { Message = "Request Completed" });
         }
     }
 }

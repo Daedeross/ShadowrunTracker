@@ -7,10 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="System.Runtime.Caching" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ShadowrunTracker.Client\ShadowrunTracker.Client.csproj" />
     <ProjectReference Include="..\ShadowrunTracker.Contract\ShadowrunTracker.Contract.csproj" />
   </ItemGroup>
 

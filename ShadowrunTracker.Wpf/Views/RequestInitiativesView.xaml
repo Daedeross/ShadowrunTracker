@@ -41,7 +41,7 @@
                     Style="{StaticResource MaterialDesignFloatingActionMiniSecondaryDarkButton}"
                     Content="{materialDesign:PackIcon Kind=DiceMultiple, Size={StaticResource IconSize}}"
                     Command="{Binding RollAll}"></Button>
-            <ListBox ItemsSource="{Binding Participants}"
+            <ListBox x:Name="ParticipantsList" ItemsSource="{Binding Participants}"
                      Grid.IsSharedSizeScope="True"
                      Grid.Row="1"
                      Grid.ColumnSpan="5">

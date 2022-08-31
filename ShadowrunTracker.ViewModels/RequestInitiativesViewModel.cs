@@ -16,7 +16,7 @@
     public class RequestInitiativesViewModel : ReusableModalViewModelBase<IEnumerable<ICharacterViewModel>, IEnumerable<IParticipantInitiativeViewModel>?>, IRequestInitiativesViewModel
     {
         private ObservableCollection<IPendingParticipantInitiativeViewModel> m_Participants;
-        private readonly IDataStore<Guid> _store;
+        private readonly IViewModelFactory _viewModelFactory;
         private readonly IObservableCollection<ICharacterViewModel> _characters;
 
         public ObservableCollection<IPendingParticipantInitiativeViewModel> Participants
@@ -27,10 +27,10 @@
 
         public ICommand RollAll { get; }
 
-        public RequestInitiativesViewModel(IDataStore<Guid> store, IObservableCollection<ICharacterViewModel> characters)
+        public RequestInitiativesViewModel(IViewModelFactory viewModelFactory, IObservableCollection<ICharacterViewModel> characters)
             : base(false)
         {
-            _store = store;
+            _viewModelFactory = viewModelFactory;
 
             m_Participants = new ObservableCollection<IPendingParticipantInitiativeViewModel>();
             _characters = characters;
@@ -63,7 +63,7 @@
 
         protected override IEnumerable<IParticipantInitiativeViewModel> OkResult()
         {
-            return Participants.Select(p => p.ToParticipant(_store));
+            return Participants.Select(p => p.ToParticipant(_viewModelFactory));
         }
 
         protected override IEnumerable<IParticipantInitiativeViewModel>? CancelResult()

@@ -3,6 +3,7 @@
     using ReactiveUI;
     using System;
     using System.Reactive.Disposables;
+
     public abstract class ViewModelBase : ReactiveObject, IViewModel, IDisposable
     {
         protected readonly CompositeDisposable _disposables = new();

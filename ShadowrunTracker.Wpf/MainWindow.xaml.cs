@@ -10,8 +10,10 @@ namespace ShadowrunTracker.Wpf
     using ShadowrunTracker.Model;
     using ShadowrunTracker.Utils;
     using ShadowrunTracker.ViewModels;
+    using ShadowrunTracker.Wpf.Views;
     using System;
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Reactive;
@@ -28,6 +30,7 @@ namespace ShadowrunTracker.Wpf
     {
         private readonly IViewModelFactory _viewModelFactory;
         private IDrawerManager _drawerManager;
+        private ConcurrentDictionary<Type, Window> _childWindows = new ConcurrentDictionary<Type, Window>();
 
         public IWorkspaceViewModel ViewModel
         {
@@ -59,22 +62,21 @@ namespace ShadowrunTracker.Wpf
                 this.BindCommand(ViewModel, vm => vm.NewEncounter, v => v.NewEncounterButton)
                     .DisposeWith(d);
 
-                this.OneWayBind(ViewModel, vm => vm.CurrentEncounter, c => c.EncounterHost.ViewModel)
+                this.BindCommand(ViewModel, vm => vm.StartSession, v => v.StartSessionButton)
                     .DisposeWith(d);
 
-                //this.OneWayBind(_drawerManager, m => m.LeftDrawerVisible, v => v.EncounterDrawerHost.IsLeftDrawerOpen, x =>
-                //{
-                //    return x;
-                //}).DisposeWith(d);
-                //this.OneWayBind(_drawerManager, m => m.LeftDrawerContext, v => v.LeftDrawer.ViewModel);
-
-                this.WhenAnyValue(v => v._drawerManager.BottomDrawerVisible)
-                    .Subscribe(b => EncounterDrawerHost.IsBottomDrawerOpen = b)
+                this.BindCommand(ViewModel, vm => vm.ConnectToSession, v => v.ConnectToSessionButton)
                     .DisposeWith(d);
 
-                this.WhenAnyValue(v => v._drawerManager.BottomDrawerContext)
-                    .Subscribe(vm => BottomDrawerContent.ViewModel = vm)
+                this.OneWayBind(ViewModel, vm => vm.CurrentEncounter, c => c.EncounterHost.ViewModel, e => e as IGmEncounterViewModel)
                     .DisposeWith(d);
+
+                ViewModel.CurrentPlayerEncounter
+                    .WhereNotNull()
+                    .Subscribe(e => ShowChildWindow(e, () => new OverlayEncounterWindow()))
+                    .DisposeWith(d);
+
+                BindDrawers(d);
 
                 EncounterDrawerHost.Events()
                     .DrawerClosing
@@ -89,9 +91,48 @@ namespace ShadowrunTracker.Wpf
                 Interactions.SaveDialog
                     .RegisterHandler(SaveObject)
                     .DisposeWith(d);
+
+                Interactions.GetData
+                    .RegisterHandler(ctx => ShowDataEntryDialog(ctx, d))
+                    .DisposeWith(d);
+
+                Interactions.SelectFromList
+                    .RegisterHandler(ctx => ShowListSelectDialog(ctx, d))
+                    .DisposeWith(d);
             });
 
             DataContext = ViewModel;
+        }
+
+        private void BindDrawers(CompositeDisposable d)
+        {
+            this.WhenAnyValue(v => v._drawerManager.LeftDrawerVisible)
+                .Subscribe(b => EncounterDrawerHost.IsLeftDrawerOpen = b)
+                .DisposeWith(d);
+            this.WhenAnyValue(v => v._drawerManager.LeftDrawerContext)
+                .Subscribe(vm => LeftDrawerContent.ViewModel = vm)
+                .DisposeWith(d);
+
+            //this.WhenAnyValue(v => v._drawerManager.RightDrawerVisible)
+            //    .Subscribe(b => EncounterDrawerHost.IsRightDrawerOpen = b)
+            //    .DisposeWith(d);
+            //this.WhenAnyValue(v => v._drawerManager.RightDrawerContext)
+            //    .Subscribe(vm => RightDrawerContent.ViewModel = vm)
+            //    .DisposeWith(d);
+
+            //this.WhenAnyValue(v => v._drawerManager.TopDrawerVisible)
+            //    .Subscribe(b => EncounterDrawerHost.IsTopDrawerOpen = b)
+            //    .DisposeWith(d);
+            //this.WhenAnyValue(v => v._drawerManager.TopDrawerContext)
+            //    .Subscribe(vm => TopDrawerContent.ViewModel = vm)
+            //    .DisposeWith(d);
+
+            this.WhenAnyValue(v => v._drawerManager.BottomDrawerVisible)
+                .Subscribe(b => EncounterDrawerHost.IsBottomDrawerOpen = b)
+                .DisposeWith(d);
+            this.WhenAnyValue(v => v._drawerManager.BottomDrawerContext)
+                .Subscribe(vm => BottomDrawerContent.ViewModel = vm)
+                .DisposeWith(d);
         }
 
         private IObservable<Unit> RequestConfirmation(InteractionContext<string, bool> context)
@@ -207,9 +248,67 @@ namespace ShadowrunTracker.Wpf
                 return null;
             }
         }
+
+        private IObservable<Unit> ShowDataEntryDialog(InteractionContext<(string Header, IList<EntryDatum> Options), IList<object>> context, CompositeDisposable disposables)
+        {
+            IDataEntryModalViewModel vm = new DataEntryModalViewModel(context.Input.Header, context.Input.Options);
+            return ShowModalDialog<IDataEntryModalViewModel, IList<object>>(vm, context.SetOutput, disposables);
+        }
+
+        private IObservable<Unit> ShowListSelectDialog(InteractionContext<SelectWithRefreshContext, string> context, CompositeDisposable disposables)
+        {
+            var vm = new ListSelectViewModel(context.Input.Header, context.Input.Refresh);
+            vm.RefreshAsync(default);
+            return ShowModalDialog<IListSelectViewModel, string>(vm, context.SetOutput, disposables);
+        }
+
+        private IObservable<Unit> ShowModalDialog<TViewModel, TOut>(TViewModel viewModel, Action<TOut> onNext, CompositeDisposable disposables)
+            where TViewModel : IDisposableModalViewModel<TOut>
+        {
+            WindowDialogHost.DialogContent = viewModel;
+            WindowDialogHost.IsOpen = true;
+
+            viewModel.Complete.Subscribe(onNext, () =>
+            {
+                WindowDialogHost.IsOpen = false;
+                viewModel.Dispose();
+            }).DisposeWith(disposables);
+
+
+            return viewModel.Complete
+                //.Do(onNext, () =>
+                //{
+                //    WindowDialogHost.IsOpen = false;
+                //    viewModel.Dispose();
+                //})
+                .Select(x => Unit.Default);
+        }
+
         private void CancelDockModal(Dock dock)
         {
             _drawerManager.CancelDrawer(dock);
+        }
+
+        private void ShowChildWindow<T>(T viewModel, Func<ReactiveWindow<T>> factory = null)
+            where T : class, IViewModel
+        {
+            Func<Type, Window> _factory = factory is null
+                ? t => new ReactiveWindow<T>()
+                : t => factory();
+
+            var window = _childWindows.AddOrUpdate(typeof(T), _factory, (t, w) => w);
+            if (window is ReactiveWindow<T> child)
+            {
+                child.ViewModel = viewModel;
+                child.Show();
+                child.Activate();
+                child.Closed += (s, e) => _childWindows.TryRemove(typeof(T), out var _);
+                WindowState = WindowState.Minimized;
+            }
+            else
+            {
+                throw new InvalidCastException("Invalid window type.");
+            }
         }
     }
 }

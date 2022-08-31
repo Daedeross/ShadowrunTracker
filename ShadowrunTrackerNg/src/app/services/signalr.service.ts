@@ -15,7 +15,7 @@ export class SignalrService {
 
   public startConnection = () => {
     this.hubConnection = new signalR.HubConnectionBuilder()
-                                    .withUrl('https://localhost:5001/chart')
+                                    .withUrl('https://localhost:5001/hubs/chart?username="testboi"')
                                     .build();
 
     this.hubConnection

@@ -26,8 +26,8 @@ namespace ShadowrunTracker.Wpf.Views
                 this.OneWayBind(ViewModel, vm => vm.Player, v => v.PlayerText.Text, x => $"({x})")
                     .DisposeWith(d);
 
-                this.OneWayBind(ViewModel, vm => vm.Player, v => v.PlayerText.Text)
-                    .DisposeWith(d);
+                //this.OneWayBind(ViewModel, vm => vm.Player, v => v.PlayerText.Text)
+                //    .DisposeWith(d);
 
                 ViewModel.WhenAnyValue(vm => vm.CurrentInitiative, vm => vm.CurrentInitiativeDice, (score, dice) => $"{score}+{dice}d6")
                     .BindTo(this, v => v.InitiativeText.Text)

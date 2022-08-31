@@ -4,6 +4,7 @@
     using System.Runtime.Serialization;
 
     [DataContract]
+    [TypeDiscriminator(9)]
     public class Improvement : RecordBase
     {
         [DataMember]

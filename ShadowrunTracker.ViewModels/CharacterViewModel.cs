@@ -11,6 +11,7 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Collections.Specialized;
+    using System.ComponentModel;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reactive.Disposables;
@@ -27,9 +28,36 @@
         public const int BaseMatrixHotInitiativeDice = 4;
         public const int PenaltyPerSpell = -2;
 
+        private static readonly ISet<string> RecordProperties = new HashSet<string>()
+        {
+            nameof(Id),
+            nameof(Alias),
+            nameof(IsPlayer),
+            nameof(Player),
+            nameof(Essence),
+            nameof(BaseBody),
+            nameof(BaseAgility),
+            nameof(BaseReaction),
+            nameof(BaseStrength),
+            nameof(BaseCharisma),
+            nameof(BaseIntuition),
+            nameof(BaseLogic),
+            nameof(BaseWillpower),
+            nameof(Edge),
+            nameof(Magic),
+            nameof(Resonance),
+            nameof(PainEditor),
+            nameof(PainResistence),
+            nameof(SpellsSustained),
+            nameof(Skills),
+            nameof(Improvements)
+        };
+
         private readonly Dictionary<IImprovementViewModel, BonusHandler> _bonusHandlers;
         private readonly IDataStore<Guid> _store;
+        private readonly IViewModelFactory _viewModelFactory;
 
+        private bool _pushUpdate = true;
         private string? _filename;
 
         private IRoller _roller;
@@ -40,10 +68,11 @@
 
         public bool IsChanged { get; set; }
 
-        public CharacterViewModel(IRoller roller, IDataStore<Guid> store)
+        public CharacterViewModel(IRoller roller, IDataStore<Guid> store, IViewModelFactory viewModelFactory)
         {
             _roller = roller ?? throw new ArgumentNullException(nameof(roller));
             _store = store;
+            _viewModelFactory = viewModelFactory;
 
             _id = Guid.NewGuid();
             m_Alias = string.Empty;
@@ -80,44 +109,47 @@
                 .DisposeWith(_disposables);
             RemoveCharacter = ReactiveCommand.Create(RemoveCharacterExecute)
                 .DisposeWith(_disposables);
+
+            PropertyChanged += OnPropertyChanged;
         }
 
-        public CharacterViewModel(IRoller roller, IDataStore<Guid> store, [NotNull] Character loader)
+        public CharacterViewModel(IRoller roller, IDataStore<Guid> store, IViewModelFactory viewModelFactory, [NotNull] Character record)
         {
-            if (loader is null)
+            if (record is null)
             {
-                throw new ArgumentNullException(nameof(loader));
+                throw new ArgumentNullException(nameof(record));
             }
 
             _roller = roller ?? throw new ArgumentNullException(nameof(roller));
             _store = store;
+            _viewModelFactory = viewModelFactory;
 
-            _id = loader.Id == Guid.Empty ? Guid.NewGuid() : loader.Id;
-            m_Alias = loader.Alias ?? string.Empty;
-            m_IsPlayer = loader.IsPlayer;
-            m_Player = loader.Player ?? string.Empty;
+            _id = record.Id == Guid.Empty ? Guid.NewGuid() : record.Id;
+            m_Alias = record.Alias ?? string.Empty;
+            m_IsPlayer = record.IsPlayer;
+            m_Player = record.Player ?? string.Empty;
 
-            m_Essence = loader.Essence;
+            m_Essence = record.Essence;
 
-            m_BaseBody = loader.BaseBody;
-            m_BaseAgility = loader.BaseAgility;
-            m_BaseReaction = loader.BaseReaction;
-            m_BaseStrength = loader.BaseStrength;
-            m_BaseCharisma = loader.BaseCharisma;
-            m_BaseIntuition = loader.BaseIntuition;
-            m_BaseLogic = loader.BaseLogic;
-            m_BaseWillpower = loader.BaseWillpower;
+            m_BaseBody = record.BaseBody;
+            m_BaseAgility = record.BaseAgility;
+            m_BaseReaction = record.BaseReaction;
+            m_BaseStrength = record.BaseStrength;
+            m_BaseCharisma = record.BaseCharisma;
+            m_BaseIntuition = record.BaseIntuition;
+            m_BaseLogic = record.BaseLogic;
+            m_BaseWillpower = record.BaseWillpower;
 
-            m_BaseEdge = loader.Edge;
-            m_BaseMagic = loader.Magic;
-            m_BaseResonance = loader.Resonance;
+            m_BaseEdge = record.Edge;
+            m_BaseMagic = record.Magic;
+            m_BaseResonance = record.Resonance;
 
-            m_PainEditor = loader.PainEditor;
-            m_PainResistence = loader.PainResistence;
-            m_SpellsSustained = loader.SpellsSustained;
+            m_PainEditor = record.PainEditor;
+            m_PainResistence = record.PainResistence;
+            m_SpellsSustained = record.SpellsSustained;
 
-            Skills = new ObservableCollection<ISkillViewModel>(loader.Skills.Select(s => (ISkillViewModel)new SkillViewModel(s)));
-            Improvements = new ObservableCollection<IImprovementViewModel>(loader.Improvements.Select(i => (IImprovementViewModel)new ImprovementViewModel(i)));
+            Skills = new ObservableCollection<ISkillViewModel>(record.Skills.Select(s => (ISkillViewModel)new SkillViewModel(s)));
+            Improvements = new ObservableCollection<IImprovementViewModel>(record.Improvements.Select(i => (IImprovementViewModel)new ImprovementViewModel(i)));
             Improvements.CollectionChanged += OnImprovementsChanged;
             _bonusHandlers = Improvements.ToDictionary(
                 imp => imp,
@@ -127,6 +159,8 @@
                 .DisposeWith(_disposables);
             RemoveCharacter = ReactiveCommand.Create(RemoveCharacterExecute)
                 .DisposeWith(_disposables);
+
+            PropertyChanged += OnPropertyChanged;
         }
 
         private void OnImprovementsChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -823,6 +857,10 @@
                 .DisposeWith(_disposables);
         }
 
+        RecordBase IRecordViewModel.Record => ToRecord();
+
+        public Character Record => ToRecord();
+
         public Character ToRecord()
         {
             return this.ToModel();
@@ -830,31 +868,40 @@
 
         public void Update(Character record)
         {
-            if (record.Id != Id)
+            try
             {
-                throw new ArgumentException("Record and VM Ids do not match");
-            }
+                _pushUpdate = false;
 
-            Alias = record.Alias ?? string.Empty;
-            IsPlayer = record.IsPlayer;
-            Player = record.Player ?? string.Empty;
-            Essence = record.Essence;
-            BaseBody = record.BaseBody;
-            BaseAgility = record.BaseAgility;
-            BaseReaction = record.BaseReaction;
-            BaseStrength = record.BaseStrength;
-            BaseCharisma = record.BaseCharisma;
-            BaseIntuition = record.BaseIntuition;
-            BaseLogic = record.BaseLogic;
-            BaseWillpower = record.BaseWillpower;
-            m_BaseEdge = record.Edge;
-            m_BaseMagic = record.Magic;
-            m_BaseResonance = record.Resonance;
-            PainEditor = record.PainEditor;
-            PainResistence = record.PainResistence;
-            SpellsSustained = record.SpellsSustained;
-            UpdateSkills(record.Skills);
-            UpdateImprovements(record.Improvements);
+                if (record.Id != Id)
+                {
+                    throw new ArgumentException("Record and VM Ids do not match");
+                }
+
+                Alias = record.Alias ?? string.Empty;
+                IsPlayer = record.IsPlayer;
+                Player = record.Player ?? string.Empty;
+                Essence = record.Essence;
+                BaseBody = record.BaseBody;
+                BaseAgility = record.BaseAgility;
+                BaseReaction = record.BaseReaction;
+                BaseStrength = record.BaseStrength;
+                BaseCharisma = record.BaseCharisma;
+                BaseIntuition = record.BaseIntuition;
+                BaseLogic = record.BaseLogic;
+                BaseWillpower = record.BaseWillpower;
+                m_BaseEdge = record.Edge;
+                m_BaseMagic = record.Magic;
+                m_BaseResonance = record.Resonance;
+                PainEditor = record.PainEditor;
+                PainResistence = record.PainResistence;
+                SpellsSustained = record.SpellsSustained;
+                UpdateSkills(record.Skills);
+                UpdateImprovements(record.Improvements);
+            }
+            finally
+            {
+                _pushUpdate = true;
+            }
         }
 
         private void UpdateSkills(IEnumerable<Skill> incomming)
@@ -922,7 +969,7 @@
             {
                 foreach (var record in added)
                 {
-                    Improvements.Add(_store.CreateOrUpdate(record, s => new ImprovementViewModel(s)));
+                    Improvements.Add(_store.CreateOrUpdate(record, s => _viewModelFactory.Create<IImprovementViewModel, Improvement>(s)));
                 }
             }
         }
@@ -959,7 +1006,30 @@
         {
             Remove?.Invoke(this, new RemoveCharacterEventArgs(this));
         }
+        private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (_pushUpdate && ReferenceEquals(this, sender) && RecordProperties.Contains(e.PropertyName))
+            {
+                this.RaisePropertyChanged(nameof(Record));
+            }
+        }
 
         #endregion
+
+        private bool disposedValue;
+
+        protected override void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    this.PropertyChanged -= OnPropertyChanged;
+                }
+
+                disposedValue = true;
+            }
+            base.Dispose(disposing);
+        }
     }
 }

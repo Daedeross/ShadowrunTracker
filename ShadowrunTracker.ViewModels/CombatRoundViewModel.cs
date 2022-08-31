@@ -11,6 +11,7 @@
     using System.Collections.Specialized;
     using System.Linq;
     using System.Reactive;
+    using System.Reactive.Disposables;
     using System.Reactive.Linq;
     using System.Windows.Input;
 
@@ -23,35 +24,43 @@
         private readonly IViewModelFactory _viewModelFactory;
         private readonly IDataStore<Guid> _store;
 
+        private bool _pushUpdate = true;
+
         public CombatRoundViewModel(IViewModelFactory viewModelFactory,
             IDataStore<Guid> store,
-            IEnumerable<IParticipantInitiativeViewModel> participants,
-            Guid? id = null)
+            IEnumerable<IParticipantInitiativeViewModel>? participants = null,
+            CombatRound? record = null)
         {
             _viewModelFactory = viewModelFactory;
             _store = store;
 
-            Id = id ?? Guid.NewGuid();
+            Id = record?.Id ?? Guid.NewGuid();
 
-            var nextToAct = ReactiveCommand.Create(NextToAct);
-            var endPass = ReactiveCommand.Create(EndPass);
-            var endRound = ReactiveCommand.Create(EndRound);
-
-            NextToActCommad = nextToAct;
-            EndPassCommand = endPass;
-            EndRoundCommand = endRound;
-
-            _disposables.Add(nextToAct);;
-            _disposables.Add(endPass);
-            _disposables.Add(endRound);
+            NextToActCommad = ReactiveCommand.Create(NextToAct)
+                .DisposeWith(_disposables);
+            EndPassCommand = ReactiveCommand.Create(EndPass)
+                .DisposeWith(_disposables);
+            EndRoundCommand = ReactiveCommand.Create(EndRound)
+                .DisposeWith(_disposables);
 
             InitiativePasses.CollectionChanged += this.OnInitiativePassesCollectionChanged;
 
-            Participants = new ObservableCollection<IParticipantInitiativeViewModel>(participants);
+            Participants = new ObservableCollection<IParticipantInitiativeViewModel>(participants ?? Array.Empty<IParticipantInitiativeViewModel>());
 
-            m_CurrentPass = _viewModelFactory.CreatePass(Participants);
-            m_CurrentPass.Index = 0;
-            InitiativePasses.Add(CurrentPass);
+            if (Participants.Any())
+            {
+                m_CurrentPass = _viewModelFactory.CreatePass(Participants);
+                m_CurrentPass.Index = 0;
+                InitiativePasses.Add(m_CurrentPass);
+            }
+
+            Participants.CollectionChanged += this.OnCollectionChanged;
+            InitiativePasses.CollectionChanged += this.OnCollectionChanged;
+
+            if (record != null)
+            {
+                Update(record);
+            }
         }
 
         public Guid Id { get; }
@@ -60,8 +69,8 @@
 
         public ObservableCollection<IInitiativePassViewModel> InitiativePasses { get; } = new ObservableCollection<IInitiativePassViewModel>();
 
-        private IInitiativePassViewModel m_CurrentPass;
-        public IInitiativePassViewModel CurrentPass
+        private IInitiativePassViewModel? m_CurrentPass;
+        public IInitiativePassViewModel? CurrentPass
         {
             get => m_CurrentPass;
             protected set => this.RaiseAndSetIfChanged(ref m_CurrentPass, value);
@@ -75,7 +84,7 @@
 
         private void EndRound()
         {
-            if (CurrentPass.Participants.Any(p => (!p.Acted && p.InitiativeScore > 0)) == true)
+            if (CurrentPass != null && CurrentPass.Participants.Any(p => (!p.Acted && p.InitiativeScore > 0)) == true)
             {
                 RequestConfirmation(EndPassConfirmMessage, StartNextRound);
             }
@@ -91,7 +100,7 @@
 
         public void EndPass()
         {
-            if (CurrentPass.Participants.All(p => !p.Acted || p.InitiativeScore > 0) == true)
+            if (CurrentPass != null && CurrentPass.Participants.All(p => !p.Acted || p.InitiativeScore > 0) == true)
             {
                 RequestConfirmation(EndPassConfirmMessage, StartNextPass);
             }
@@ -111,7 +120,7 @@
 
             if (Participants.Any(p => p.InitiativeScore > 0))
             {
-                var newPass = new InitiativePassViewModel(_store, Participants);
+                var newPass = _viewModelFactory.CreatePass(Participants);
                 newPass.Index = InitiativePasses.Count;
                 InitiativePasses.Add(newPass);
                 CurrentPass = newPass;
@@ -134,7 +143,7 @@
 
         public void NextToAct()
         {
-            CurrentPass.Next();
+            CurrentPass?.Next();
         }
 
         private void OnInitiativePassesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -161,7 +170,7 @@
             if (addToPass)
             {
                 participant.Acted = acted;
-                CurrentPass.Participants.Add(participant);
+                CurrentPass?.Participants.Add(participant);
             }
         }
 
@@ -174,7 +183,7 @@
         {
             if (Participants.Remove(participant))
             {
-                CurrentPass.Participants.Remove(participant);
+                CurrentPass?.Participants.Remove(participant);
 
                 return true;
             }
@@ -197,6 +206,10 @@
             }
         }
 
+        RecordBase IRecordViewModel.Record => ToRecord();
+
+        public CombatRound Record => ToRecord();
+
         public CombatRound ToRecord()
         {
             return new CombatRound
@@ -209,21 +222,30 @@
 
         public void Update(CombatRound record)
         {
-            if (record.Id != Id)
+            try
             {
-                throw new ArgumentException($"Record id does not match: ViewModel Id: {Id} | Record Id: {record.Id}", nameof(record));
-            }
+                _pushUpdate = false;
 
-            UpdateParticipants(record.Participants);
-            UpdatePasses(record.InitiativePasses);
+                if (record.Id != Id)
+                {
+                    throw new ArgumentException($"Record id does not match: ViewModel Id: {Id} | Record Id: {record.Id}", nameof(record));
+                }
 
-            if (record.CurrentPassIndex < 0 || record.CurrentPassIndex >= InitiativePasses.Count)
-            {
-                throw new ArgumentOutOfRangeException(nameof(record.CurrentPassIndex));
+                UpdateParticipants(record.Participants);
+                UpdatePasses(record.InitiativePasses);
+
+                if (record.CurrentPassIndex < 0 || record.CurrentPassIndex >= InitiativePasses.Count)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(record.CurrentPassIndex));
+                }
+                else
+                {
+                    CurrentPass = InitiativePasses[record.CurrentPassIndex];
+                }
             }
-            else
+            finally
             {
-                CurrentPass = InitiativePasses[record.CurrentPassIndex];
+                _pushUpdate = true;
             }
         }
 
@@ -278,7 +300,7 @@
                         var charVm = _store.TryGet<ICharacterViewModel>(participant.CharacterId);
                         if (charVm.HasValue)
                         {
-                            AddParticipant(new ParticipantInitiativeViewModel(_store, charVm.Value, participant), true, participant.Acted);
+                            AddParticipant(_viewModelFactory.Create<IParticipantInitiativeViewModel, ParticipantInitiative>(participant));
                         }
                         else
                         {
@@ -324,11 +346,17 @@
             {
                 foreach (var record in added)
                 {
-                    var vm = new InitiativePassViewModel(_store, Participants, record.Id);
-                    vm.Index = record.Index;
-                    vm.Update(record);
+                    var vm = _viewModelFactory.CreatePass(new IParticipantInitiativeViewModel[0], record);
                     InitiativePasses.Add(vm);
                 }
+            }
+        }
+
+        private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (_pushUpdate && ReferenceEquals(this, sender))
+            {
+                this.RaisePropertyChanged(nameof(Record));
             }
         }
 
@@ -342,6 +370,9 @@
         {
             if (!_disposedValue)
             {
+                InitiativePasses.CollectionChanged -= OnCollectionChanged;
+                Participants.CollectionChanged -= OnCollectionChanged;
+
                 if (disposing)
                 {
                     foreach (var pass in InitiativePasses)

@@ -1,9 +1,9 @@
 ﻿namespace ShadowrunTracker.ViewModels
 {
-    public interface IRecordViewModel<TRecord> : IViewModel, IHaveId
-    {
-        TRecord ToRecord();
+    using ShadowrunTracker.Data;
 
-        void Update(TRecord record);
+    public interface IRecordViewModel: IViewModel, IHaveId
+    {
+        RecordBase Record { get; }
     }
 }

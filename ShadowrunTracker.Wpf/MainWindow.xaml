@@ -44,7 +44,9 @@
     <mah:MetroWindow.RightWindowCommands>
         <mah:WindowCommands>
             <Button Name="NewEncounterButton"
-                    Command="{Binding NewEncounter}">New Encounter</Button>
+                    Command="{Binding NewEncounter}">Start Local</Button>
+            <Button x:Name="StartSessionButton">Start Remote</Button>
+            <Button x:Name="ConnectToSessionButton">Join Remote</Button>
         </mah:WindowCommands>
     </mah:MetroWindow.RightWindowCommands>
     <materialDesign:DialogHost Name="WindowDialogHost"
@@ -138,7 +140,7 @@
                                     </Style.Triggers>
                                 </Style>
                             </Grid.Style>
-                            <rxui:ViewModelViewHost Name="LeftDrawer"
+                            <rxui:ViewModelViewHost Name="LeftDrawerContent"
                                                     HorizontalAlignment="Stretch"
                                                     VerticalAlignment="Stretch"
                                                     HorizontalContentAlignment="Stretch"

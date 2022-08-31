@@ -6,7 +6,7 @@
 
     public abstract class ModalViewModelBase : ViewModelBase, IModalViewModel
     {
-        public ICommand OkCommand { get; }
+        public ICommand OkCommand { get; protected set; }
 
         public ICommand CancelCommand { get; }
 

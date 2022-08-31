@@ -1,0 +1,223 @@
+﻿<rxui:ReactiveUserControl x:Class="ShadowrunTracker.Wpf.Views.OverlayInitiativePassView"
+                          x:TypeArguments="vmi:IInitiativePassViewModel"
+                          xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                          xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+                          xmlns:rxui="http://reactiveui.net"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:mui="http://schemas.modernwpf.com/2019"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:mock="clr-namespace:ShadowrunTracker.Mock;assembly=ShadowrunTracker.Mock"
+                          xmlns:vmi="clr-namespace:ShadowrunTracker.ViewModels;assembly=ShadowrunTracker.ViewModels.Contract"
+                          xmlns:helpers="clr-namespace:ShadowrunTracker.Wpf.Helpers"
+                          xmlns:local="clr-namespace:ShadowrunTracker.Wpf.Views"
+                          xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+                          xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                          mc:Ignorable="d"
+                          d:DataContext="{d:DesignInstance Type=mock:MockInitiativePassViewModel, IsDesignTimeCreatable=True}"
+                          d:DesignHeight="650" d:DesignWidth="900">
+    <UserControl.Resources>
+        <CollectionViewSource x:Key="participantsCVS" Source="{Binding Participants}"
+                              IsLiveSortingRequested="True">
+            <CollectionViewSource.SortDescriptions>
+                <scm:SortDescription PropertyName="Acted" Direction="Descending" />
+                <scm:SortDescription PropertyName="SeizedInitiative" Direction="Descending" />
+                <scm:SortDescription PropertyName="InitiativeScore" Direction="Descending" />
+                <scm:SortDescription PropertyName="Character.Edge" Direction="Descending" />
+                <scm:SortDescription PropertyName="Character.Reaction" Direction="Descending" />
+                <scm:SortDescription PropertyName="Character.Intuition" Direction="Descending" />
+                <scm:SortDescription PropertyName="TieBreaker" Direction="Descending" />
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
+        <sys:Double x:Key="IconSize">24</sys:Double>
+        <SolidColorBrush x:Key="PrimaryHueLightBrush02" Color="{Binding Color, Source={StaticResource PrimaryHueLightBrush}}" Opacity="0.2" />
+        <SolidColorBrush x:Key="PrimaryHueMidBrush02" Color="{Binding Color, Source={StaticResource PrimaryHueMidBrush}}" Opacity="0.4" />
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+        <ListBox Name="ParticipantsBox"
+                ItemsSource="{Binding Source={StaticResource participantsCVS}}"
+                SelectedItem="{Binding ActiveParticipant}"
+                materialDesign:ListBoxItemAssist.ShowSelection="False"
+                Margin="3">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem" BasedOn="{StaticResource MyMaterialDesignListBoxItem}" >
+                    <Setter Property="HorizontalAlignment" Value="Stretch" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="Background" Value="{DynamicResource PrimaryHueLightBrush02}" />
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="Focusable" Value="false"/>
+                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidForegroundBrush}" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding CanAct}" Value="False">
+                            <Setter Property="Opacity" Value="0.5" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Character.IsPlayer}" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource PrimaryHueDarkForegroundBrush}" />
+                            <!--<Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}" />-->
+                        </DataTrigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush02}" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <mui:SimpleStackPanel Spacing="4" Orientation="Vertical" HorizontalAlignment="Stretch" >
+                        <mui:SimpleStackPanel.Style>
+                            <Style TargetType="mui:SimpleStackPanel">
+                                <!--<Setter Property="Background" Value="{StaticResource ShadowrunPrimaryRed}" />-->
+                            </Style>
+                        </mui:SimpleStackPanel.Style>
+                        <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <Button Style="{DynamicResource MaterialDesignFloatingActionMiniDarkButton}"
+                                    IsEnabled="False">
+                                <TextBlock Text="{Binding InitiativeScore}"
+                                           Style="{DynamicResource MaterialDesignButtonTextBlock}"
+                                           FontSize="22"
+                                           FontWeight="Bold"
+                                           Foreground="LightCyan"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            </Button>
+                            <TextBlock DockPanel.Dock="Left"
+                                       Margin="8 0"
+                                       Style="{DynamicResource MaterialDesignHeadline4TextBlock}"
+                                       Text="{Binding Character.Alias}" />
+                            <TextBlock DockPanel.Dock="Left"
+                                       Margin="8 0"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Character.Player, StringFormat={}({0})}"
+                                       >
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignHeadline5TextBlock}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Character.IsPlayer}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </DockPanel>
+                        <WrapPanel Orientation="Horizontal">
+                            <WrapPanel.Style>
+                                <Style TargetType="WrapPanel">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Character.IsPlayer}" Value="False">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </WrapPanel.Style>
+                            <ListBox ItemsSource="{Binding PhysicalBoxes}"
+                                     ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                                     VerticalAlignment="Center"
+                                     MinWidth="200"
+                                     Height="24">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel IsItemsHost="True" Orientation="Horizontal" VerticalAlignment="Center" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem" BasedOn="{StaticResource MyMaterialDesignListBoxItem}">
+                                        <Setter Property="Padding" Value="1" />
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Border x:Name="dmgRect" Width="12" Height="12"
+                                                    BorderBrush="Black" BorderThickness="2">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#FFFF8080 "/>
+                                                    </Style>
+                                                </Border.Style>
+                                            </Border>
+                                            <Border x:Name="HoverBorder"
+                                                    Margin="-1"
+                                                    Background="DarkMagenta"
+                                                    HorizontalAlignment="Stretch"
+                                                    VerticalAlignment="Stretch">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Opacity" Value="0" />
+                                                    </Style>
+                                                </Border.Style>
+                                            </Border>
+                                        </Grid>
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding IsFilled}" Value="True">
+                                                <Setter TargetName="dmgRect" Property="Background" Value="#FF500000" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding ShouldHighlight}" Value="True">
+                                                <Setter TargetName="HoverBorder" Property="Opacity" Value="0.8" />
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            <ListBox ItemsSource="{Binding StunBoxes}"
+                                     ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                                     materialDesign:ListBoxItemAssist.ShowSelection="False"
+                                     VerticalAlignment="Center"
+                                     MinWidth="200"
+                                     Height="24">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel IsItemsHost="True" Orientation="Horizontal" VerticalAlignment="Center" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem" BasedOn="{StaticResource MaterialDesignListBoxItem}">
+                                        <Setter Property="Padding" Value="1" />
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Border x:Name="dmgRect" Width="12" Height="12"
+                                                    BorderBrush="Black" BorderThickness="2">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#705050FF "/>
+                                                    </Style>
+                                                </Border.Style>
+                                            </Border>
+                                            <Border x:Name="HoverBorder"
+                                                    Margin="-1"
+                                                    Background="DarkMagenta"
+                                                    HorizontalAlignment="Stretch"
+                                                    VerticalAlignment="Stretch">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Opacity" Value="0" />
+                                                    </Style>
+                                                </Border.Style>
+                                            </Border>
+                                        </Grid>
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding IsFilled}" Value="True">
+                                                <Setter TargetName="dmgRect" Property="Background" Value="#FF4040A0" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding ShouldHighlight}" Value="True">
+                                                <Setter TargetName="HoverBorder" Property="Opacity" Value="0.3" />
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </WrapPanel>
+                    </mui:SimpleStackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</rxui:ReactiveUserControl>

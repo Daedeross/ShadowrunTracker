@@ -3,7 +3,6 @@
     using ShadowrunTracker.Data;
     using ShadowrunTracker.Data.Traits;
     using ShadowrunTracker.ViewModels;
-    using System.Runtime.CompilerServices;
 
     public static class DataExtensions
     {
@@ -104,7 +103,10 @@
 
         public static IViewModel SyncFromRecord(this IDataStore<Guid> store, IViewModelFactory factory, RecordBase record) => record switch
         {
-            Encounter encounter => store.CreateOrUpdate(encounter, r => factory.Create<IEncounterViewModel>()),
+            // only encounter can be created out of context
+            Encounter encounter => store.CreateOrUpdate(encounter, r => factory.Create<IPlayerEncounterViewModel, Encounter>(r)),
+            // everyting else can only be created in context (i.e. in an update of their parent entity)
+            // for now, it will throw an exception when an update comes in for an orphaned entity
             Character character => store.UpdateOrThrow<Character, ICharacterViewModel>(character),
             CombatRound combatRound => store.UpdateOrThrow<CombatRound, ICombatRoundViewModel>(combatRound),
             ParticipantInitiative participant => store.UpdateOrThrow<ParticipantInitiative, IParticipantInitiativeViewModel>(participant),
@@ -112,7 +114,7 @@
             Skill skill => store.UpdateOrThrow<Skill, ISkillViewModel>(skill),
             Improvement improvement => store.UpdateOrThrow<Improvement, IImprovementViewModel>(improvement),
 
-            _ => throw new InvalidOperationException()
+            _ => throw new NotSupportedException()
         };
     }
 }

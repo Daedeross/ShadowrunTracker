@@ -8,21 +8,38 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Castle.Windsor" Version="5.1.1" />
+    <PackageReference Include="Castle.Windsor" Version="5.1.2" />
     <PackageReference Include="MahApps.Metro" Version="2.4.9" />
     <PackageReference Include="MahApps.Metro.IconPacks" Version="4.11.0" />
-    <PackageReference Include="MaterialDesignThemes.MahApps" Version="0.2.1" />
-    <PackageReference Include="ModernWpfUI.MahApps" Version="0.9.4" />
+    <PackageReference Include="MaterialDesignThemes.MahApps" Version="0.2.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="6.0.0" />
+    <PackageReference Include="ModernWpfUI.MahApps" Version="0.9.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" Version="1.1.4" PrivateAssets="all" />
-    <PackageReference Include="ReactiveUI.WPF" Version="17.1.50" />
-    <PackageReference Include="SharpVectors" Version="1.7.7" />
+    <PackageReference Include="ReactiveUI.WPF" Version="18.3.1" />
+    <PackageReference Include="SharpVectors" Version="1.8.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ShadowrunTracker.Client\ShadowrunTracker.Client.csproj" />
     <ProjectReference Include="..\ShadowrunTracker.Contract\ShadowrunTracker.Contract.csproj" />
     <ProjectReference Include="..\ShadowrunTracker.Mock\ShadowrunTracker.Mock.csproj" />
     <ProjectReference Include="..\ShadowrunTracker.ViewModels\ShadowrunTracker.ViewModels.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\OverlayInitiativePassView.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+    </Page>
   </ItemGroup>
 
 </Project>

@@ -4,17 +4,29 @@
     using ShadowrunTracker.Data.Traits;
     using ShadowrunTracker.ViewModels;
     using System;
+    using System.Collections.Generic;
 
     public abstract class TraitViewModel : ViewModelBase, ITraitViewModel
     {
-        public TraitViewModel(Trait trait)
+        protected static readonly ISet<string> _traitRecordProperties = new HashSet<string>
         {
-            Id = trait.Id;
-            _name = trait.Name;
-            _description = trait.Description;
-            _notes = trait.Notes;
-            _source = trait.Source;
-            _page = trait.Page;
+            nameof(Name),
+            nameof(Description),
+            nameof(Notes),
+            nameof(Source),
+            nameof(Page),
+        };
+
+        protected bool PushUpdate = true;
+
+        public TraitViewModel(Trait record)
+        {
+            Id = record.Id;
+            _name = record.Name;
+            _description = record.Description;
+            _notes = record.Notes;
+            _source = record.Source;
+            _page = record.Page;
         }
 
         public Guid Id { get; protected set; }
@@ -55,7 +67,20 @@
             set => this.RaiseAndSetIfChanged(ref _page, value);
         }
 
-        protected void Update(Trait record)
+        public void Update(Trait record)
+        {
+            try
+            {
+                PushUpdate = false;
+                DoUpdate(record);
+            }
+            finally
+            {
+                PushUpdate = true;
+            }
+        }
+
+        protected void DoUpdate(Trait record)
         {
             if (Id != record.Id)
             {

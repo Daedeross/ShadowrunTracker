@@ -1,17 +1,14 @@
-﻿using ShadowrunTracker.Data;
-using ShadowrunTracker.Data.Traits;
-using ShadowrunTracker.Mock.TestData;
-using ShadowrunTracker.Utils;
-using ShadowrunTracker.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xunit;
-
-namespace ShadowrunTracker.Tests
+﻿namespace ShadowrunTracker.Tests
 {
+    using ShadowrunTracker.Data;
+    using ShadowrunTracker.Data.Traits;
+    using ShadowrunTracker.Mock;
+    using ShadowrunTracker.Mock.TestData;
+    using ShadowrunTracker.Utils;
+    using ShadowrunTracker.ViewModels;
+    using System.Collections.Generic;
+    using Xunit;
+
     public class CharacterViewModelTests
     {
         private Character CreateLoader()
@@ -59,7 +56,7 @@ namespace ShadowrunTracker.Tests
         public void CharacterCreatedFromLoaderTest()
         {
             var character = CreateLoader();
-            var vm = new CharacterViewModel(new Roller(), TestCharacters.DataStore, character);
+            var vm = new CharacterViewModel(new Roller(), TestCharacters.DataStore, new MockViewModelFactory(), character);
 
             Assert.Equal(character.Essence, vm.Essence);
             Assert.Equal(character.Player, vm.Player);
@@ -83,7 +80,7 @@ namespace ShadowrunTracker.Tests
                 Value = 1
             });
 
-            var vm = new CharacterViewModel(new Roller(), TestCharacters.DataStore, character);
+            var vm = new CharacterViewModel(new Roller(), TestCharacters.DataStore, new MockViewModelFactory(), character);
 
             Assert.Equal(character.Essence, vm.Essence);
             Assert.Equal(character.Player, vm.Player);
@@ -107,7 +104,7 @@ namespace ShadowrunTracker.Tests
                 Value = 1
             };
 
-            var vm = new CharacterViewModel(new Roller(), TestCharacters.DataStore, character);
+            var vm = new CharacterViewModel(new Roller(), TestCharacters.DataStore, new MockViewModelFactory(), character);
 
             vm.Improvements.Add(new ImprovementViewModel(improvement));
 

@@ -1,25 +1,19 @@
 ﻿namespace ShadowrunTracker.ViewModels
 {
-    using DynamicData;
     using DynamicData.Binding;
     using ReactiveUI;
     using ShadowrunTracker.Data;
     using ShadowrunTracker.Model;
     using System;
     using System.Collections.Generic;
-    using System.Collections.ObjectModel;
     using System.Linq;
-    using System.Reactive;
-    using System.Reactive.Disposables;
-    using System.Windows.Input;
 
-    public class EncounterViewModel : ViewModelBase, IEncounterViewModel
+    public abstract class EncounterViewModelBase : ViewModelBase, IEncounterViewModel
     {
-        private readonly IViewModelFactory _viewModelFactory;
-        private readonly IDataStore<Guid> _store;
+        protected readonly IViewModelFactory _viewModelFactory;
+        protected readonly IDataStore<Guid> _store;
 
-        private readonly SerialDisposable _requestSubscription;
-        private readonly SerialDisposable _newParticipantSubscription;
+        protected bool _pushUpdate;
 
         /// <summary>
         /// For participants that are removed, but had at some point acted.
@@ -27,33 +21,19 @@
         /// </summary>
         private readonly List<ICharacterViewModel> _removedParticipants = new List<ICharacterViewModel>();
 
-        public EncounterViewModel(IViewModelFactory viewModelFactory, IDataStore<Guid> store, Guid? id = null)
+        public EncounterViewModelBase(IViewModelFactory viewModelFactory, IDataStore<Guid> store, Guid? id = null)
         {
             _viewModelFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
             _store = store;
 
             Id = id ?? Guid.NewGuid();
-
-            NextRoundCommand = ReactiveCommand.Create(() => NextRound());
-            NewParticipantCommand = ReactiveCommand.Create<ImportMode>(NewParticipant, outputScheduler: RxApp.MainThreadScheduler);
-
-            RequestInitiatives = new Interaction<IEnumerable<ICharacterViewModel>, IEnumerable<IParticipantInitiativeViewModel>>();
-            GetNewCharacter = new Interaction<ImportMode, ICharacterViewModel>();
-
-            _requestSubscription = new SerialDisposable()
-                .DisposeWith(_disposables);
-
-            _newParticipantSubscription = new SerialDisposable()
-                .DisposeWith(_disposables);
         }
 
-        public IObservableCollection<ICharacterViewModel> Participants { get; } = new ObservableCollectionExtended<ICharacterViewModel>();
-
-        public IObservableCollection<ICombatRoundViewModel> Rounds { get; } = new ObservableCollectionExtended<ICombatRoundViewModel>();
-
-        public Interaction<IEnumerable<ICharacterViewModel>, IEnumerable<IParticipantInitiativeViewModel>> RequestInitiatives { get; }
-
-        public Interaction<ImportMode, ICharacterViewModel> GetNewCharacter { get; }
+        public EncounterViewModelBase(IViewModelFactory viewModelFactory, IDataStore<Guid> store, Encounter record)
+            :this(viewModelFactory, store, record.Id)
+        {
+            Update(record);
+        }
 
         private ICombatRoundViewModel? m_CurrentRound;
         public ICombatRoundViewModel? CurrentRound
@@ -61,6 +41,11 @@
             get => m_CurrentRound;
             set => this.RaiseAndSetIfChanged(ref m_CurrentRound, value);
         }
+
+        public IObservableCollection<ICharacterViewModel> Participants { get; } = new ObservableCollectionExtended<ICharacterViewModel>();
+
+        public IObservableCollection<ICombatRoundViewModel> Rounds { get; } = new ObservableCollectionExtended<ICombatRoundViewModel>();
+
 
         public void AddParticipant(ICharacterViewModel character, InitiativeRoll? initiative = null, bool addToPass = false, bool acted = false)
         {
@@ -82,7 +67,7 @@
 
         public void AddParticipant(Character character, InitiativeRoll? initiative = null, bool addToPass = false, bool acted = false)
         {
-            AddParticipant(_viewModelFactory.Create(character), initiative, addToPass, acted);
+            AddParticipant(_viewModelFactory.Create<ICharacterViewModel, Character>(character), initiative, addToPass, acted);
         }
 
         public void RemoveParticipant(ICharacterViewModel character)
@@ -93,7 +78,7 @@
                 if (CurrentRound != null)
                 {
                     // If the character is in the current round, they should be archived.
-                    if(CurrentRound.RemoveParticipant(character))
+                    if (CurrentRound.RemoveParticipant(character))
                     {
                         _removedParticipants.Add(character);
                     }
@@ -101,54 +86,20 @@
             }
         }
 
-        public ICommand NextRoundCommand { get; }
-
-        public void NextRound()
-        {
-            _requestSubscription.Disposable = RequestInitiatives
-                .Handle(Participants)
-                .Subscribe(CreateNextRound)
-                .DisposeWith(_disposables);
-        }
-
-        private void CreateNextRound(IEnumerable<IParticipantInitiativeViewModel> initiatives)
-        {
-            if (initiatives is null)
-            {
-                return;
-            }
-            var newRound = _viewModelFactory.CreateRound(initiatives);
-            newRound.RoundComplete += OnRoundComplete;
-            CurrentRound = newRound;
-        }
-
-        private void OnRoundComplete(object sender, EventArgs e)
-        {
-            #nullable disable
-            CurrentRound.RoundComplete -= OnRoundComplete;
-            #nullable enable
-            NextRound();
-        }
-
-        private void OnRemoveCharacter(object sender, RemoveCharacterEventArgs e)
+        protected void OnRemoveCharacter(object sender, RemoveCharacterEventArgs e)
         {
             RemoveParticipant(e.Character);
         }
 
-        public ICommand NewParticipantCommand { get; }
+        #region IRecordViewModel Implementation
 
         public Guid Id { get; }
 
-        private void NewParticipant(ImportMode mode)
-        {
-            _newParticipantSubscription.Disposable = GetNewCharacter
-                .Handle(mode)
-                .Subscribe(p => AddParticipant(p));
-        }
+        RecordBase IRecordViewModel.Record => ToRecord();
 
-        #region IRecordViewModel Implementation
+        public Encounter Record => ToRecord();
 
-        public Encounter ToRecord()
+        public virtual Encounter ToRecord()
         {
 #pragma warning disable CS8604 // Possible null reference argument.
             return new Encounter
@@ -163,12 +114,25 @@
 
         public void Update(Encounter record)
         {
-            UpdateParticipants(record.Participants);
+            try
+            {
+                _pushUpdate = false;
+
+                UpdateParticipants(record.Participants);
+                UpdateRounds(record.Rounds);
+                CurrentRound = record.CurrentRoundIndex >= 0 && record.CurrentRoundIndex < Rounds.Count
+                    ? Rounds[record.CurrentRoundIndex]
+                    : null;
+            }
+            finally
+            {
+                _pushUpdate = true;
+            }
         }
         private void UpdateParticipants(IEnumerable<Character> incomming)
         {
             var oldMap = Participants.ToDictionary(p => p.Id);
-            var newMap = incomming.ToDictionary(p => p.Id);;
+            var newMap = incomming.ToDictionary(p => p.Id); ;
 
             var removed = oldMap.Values.Where(vm => !newMap.ContainsKey(vm.Id));
             var added = newMap.Values.Where(record => !oldMap.ContainsKey(record.Id));
@@ -209,13 +173,58 @@
                     }
                     else
                     {
-                        var charVm = _viewModelFactory.Create(participant);
+                        var charVm = _viewModelFactory.Create<ICharacterViewModel, Character>(participant);
                         AddParticipant(charVm);
                     }
                 }
             }
         }
 
+        private void UpdateRounds(IEnumerable<CombatRound> incomming)
+        {
+            var oldMap = Rounds.ToDictionary(p => p.Id);
+            var newMap = incomming.ToDictionary(p => p.Id); ;
+
+            var removed = oldMap.Values.Where(vm => !newMap.ContainsKey(vm.Id));
+            var added = newMap.Values.Where(record => !oldMap.ContainsKey(record.Id));
+            var update = newMap.Join(oldMap, kvp => kvp.Key, kvp => kvp.Key, (inc, old) => (inc.Value, old.Value));
+
+            if (removed.Any())
+            {
+                throw new NotSupportedException("Cannot remove rounds.");
+            }
+            foreach (var (record, vm) in update)
+            {
+                vm.Update(record);
+            }
+            AddRoundsFromRecords(added);
+        }
+
+        private void AddRoundsFromRecords(IEnumerable<CombatRound> records)
+        {
+            foreach (var round in records)
+            {
+                ICombatRoundViewModel vm;
+                var conditional = _store.TryGet<ICombatRoundViewModel>(round.Id);
+                if (conditional.HasValue)
+                {
+                    vm = conditional.Value;
+                }
+                else
+                {
+                    vm = _viewModelFactory.CreateRound(new IParticipantInitiativeViewModel[0], round);
+                }
+
+                vm.Update(round);
+                vm.RoundComplete += OnRoundComplete;
+                Rounds.Add(vm);
+            }
+        }
+
         #endregion
+
+        protected virtual void OnRoundComplete(object sender, EventArgs e)
+        {
+        }
     }
 }

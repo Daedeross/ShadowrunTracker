@@ -10,15 +10,17 @@
     {
         T Create<T>() where T : class, IViewModel;
 
-        ICharacterViewModel Create(Character loader);
-
-        IParticipantInitiativeViewModel Create(ICharacterViewModel character, InitiativeRoll initiative);
+        IParticipantInitiativeViewModel Create(ICharacterViewModel character, ParticipantInitiative record);
 
         IRequestInitiativesViewModel Create(IObservableCollection<ICharacterViewModel> characters);
 
-        ICombatRoundViewModel CreateRound(IEnumerable<IParticipantInitiativeViewModel> participants);
+        ICombatRoundViewModel CreateRound(IEnumerable<IParticipantInitiativeViewModel>? participants = null, CombatRound? record = null);
 
-        IInitiativePassViewModel CreatePass(IEnumerable<IParticipantInitiativeViewModel> participants);
+        IInitiativePassViewModel CreatePass(IEnumerable<IParticipantInitiativeViewModel>? participants = null, InitiativePass? record = null);
+
+        TViewModel Create<TViewModel, TRecord>(TRecord record)
+            where TViewModel : IRecordViewModel<TRecord>
+            where TRecord : RecordBase;
 
         public void Release(IViewModel viewModel);
     }

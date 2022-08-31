@@ -20,7 +20,7 @@ namespace ShadowrunTracker.Utils
 
         public static void SortBy<TSource>(this ObservableCollection<TSource> source, Func<TSource, IComparable> keySelector)
         {
-            var list = source.OrderBy(keySelector);
+            var list = source.OrderBy(keySelector).ToList();
             source.Clear();
             foreach (var item in list)
             {

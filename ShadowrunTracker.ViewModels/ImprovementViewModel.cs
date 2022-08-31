@@ -5,15 +5,30 @@
     using ShadowrunTracker.Data;
     using ShadowrunTracker.Model;
     using System;
+    using System.Collections.Generic;
+    using System.ComponentModel;
 
-    public class ImprovementViewModel : ReactiveObject, IImprovementViewModel
+    public class ImprovementViewModel : ViewModelBase, IImprovementViewModel
     {
-        public ImprovementViewModel(Improvement improvement)
+        protected static readonly ISet<string> RecordProperties = new HashSet<string>
         {
-            m_Name = improvement.Name;
-            m_TargetKind = improvement.TargetKind;
-            m_Target = improvement.Target;
-            m_Value = improvement.Value;
+            nameof(Name),
+            nameof(TargetKind),
+            nameof(Target),
+            nameof(Value),
+        };
+
+        private bool _pushUpdate = true;
+
+        public ImprovementViewModel(Improvement record)
+        {
+            Id = record.Id == Guid.Empty ? Guid.NewGuid() : record.Id;
+            m_Name = record.Name;
+            m_TargetKind = record.TargetKind;
+            m_Target = record.Target;
+            m_Value = record.Value;
+
+            PropertyChanged += OnPropertyChanged;
         }
 
         private string m_Name;
@@ -44,7 +59,14 @@
             set => this.RaiseAndSetIfChanged(ref m_Value, value);
         }
 
-        public Guid Id => throw new NotImplementedException();
+        public Guid Id { get; protected set; }
+
+
+        #region IRecordViewModel implementation
+
+        RecordBase IRecordViewModel.Record => ToRecord();
+
+        public Improvement Record => ToRecord();
 
         public Improvement ToRecord()
         {
@@ -53,10 +75,44 @@
 
         public void Update(Improvement record)
         {
-            Name = record.Name;
-            TargetKind = record.TargetKind;
-            Target = record.Target;
-            Value = record.Value;
+            try
+            {
+                _pushUpdate = false;
+
+                Name = record.Name;
+                TargetKind = record.TargetKind;
+                Target = record.Target;
+                Value = record.Value;
+            }
+            finally
+            {
+                _pushUpdate = true;
+            }
+        }
+
+        private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (_pushUpdate && ReferenceEquals(this, sender) && RecordProperties.Contains(e.PropertyName))
+            {
+                this.RaisePropertyChanged(nameof(Record));
+            }
+        }
+
+        #endregion
+
+        private bool disposedValue;
+        protected override void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    PropertyChanged -= OnPropertyChanged;
+                }
+
+                disposedValue = true;
+            }
+            base.Dispose(disposing);
         }
     }
 }

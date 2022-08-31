@@ -3,7 +3,7 @@
     using System.Runtime.Serialization;
 
     [DataContract]
-    [KnownType(nameof(KnownTypes))]
+    [TypeDiscriminator(6)]
     public abstract class Trait : RecordBase
     {
         [DataMember(IsRequired = true)]
@@ -20,12 +20,5 @@
 
         [DataMember]
         public int Page { get; set; }
-
-
-        public static string[] KnownTypes = new[]
-        {
-            nameof(LeveledTrait),
-            nameof(Skill),
-        };
     }
 }

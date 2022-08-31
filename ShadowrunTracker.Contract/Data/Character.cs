@@ -5,6 +5,7 @@
     using System.Runtime.Serialization;
 
     [DataContract]
+    [TypeDiscriminator(2)]
     public class Character : RecordBase
     {
         [DataMember]

@@ -12,8 +12,8 @@
     {
         private readonly IViewFactory _viewFactory;
         private readonly MethodInfo _resolve;
-        private readonly ConcurrentDictionary<Type, Func<IViewFor?>> _cache
-            = new ConcurrentDictionary<Type, Func<IViewFor?>>();
+        private readonly ConcurrentDictionary<(Type Type, string? Name), Func<IViewFor?>> _cache
+            = new ConcurrentDictionary<(Type, string?), Func<IViewFor?>>();
 
         public WindsorViewLocator(IViewFactory viewFactory)
         {
@@ -32,25 +32,25 @@
 
             if (typeof(IViewModel).IsAssignableFrom(type))
             {
-                var foo = GetView(type);
+                var foo = GetView(type, contract);
                 return foo;
             }
 
             return null;
         }
 
-        private IViewFor<T> Resolve<T>()
+        private IViewFor<T> Resolve<T>(string? name)
             where T : class
         {
-            return _viewFactory.For<T>();
+            return _viewFactory.For<T>(name);
         }
 
-        private IViewFor? GetView(Type type)
+        private IViewFor? GetView(Type type, string? name)
         {
-            return _cache.GetOrAdd(type, CreateDelegate)();
+            return _cache.GetOrAdd((type, name), t => CreateDelegate(t.Type, t.Name))();
         }
 
-        private Func<IViewFor?> CreateDelegate(Type type)
+        private Func<IViewFor?> CreateDelegate(Type type, string? name)
         {
             Type actualType;
             if (type.IsClass)
@@ -71,7 +71,7 @@
 
             return Expression.Lambda<Func<IViewFor?>>(
                 Expression.Convert(
-                    Expression.Call(Expression.Constant(this), mi),
+                    Expression.Call(Expression.Constant(this), mi, Expression.Constant(name, typeof(string))),
                     typeof(IViewFor)
                     )
                 ).Compile();

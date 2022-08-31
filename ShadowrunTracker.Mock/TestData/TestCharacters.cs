@@ -60,7 +60,7 @@ namespace ShadowrunTracker.Mock.TestData
         }
 
         public static ICharacterViewModel CreateViewModel(string alias, int initScore, int initDice, int edge = 1, int reaction = 1, int intuition = 1)
-            => new CharacterViewModel(Roller.Default, TestData.TestCharacters.DataStore, Create(alias, initScore, initDice, edge, reaction, intuition));
+            => new CharacterViewModel(Roller.Default, TestData.TestCharacters.DataStore, new MockViewModelFactory(), Create(alias, initScore, initDice, edge, reaction, intuition));
 
         public static IParticipantInitiativeViewModel CreateParticipant(ICharacterViewModel character, InitiativeRoll? roll = null)
         {
@@ -75,7 +75,7 @@ namespace ShadowrunTracker.Mock.TestData
                 };
             }
 
-            return new ParticipantInitiativeViewModel(TestData.TestCharacters.DataStore, character, roll);
+            return new ParticipantInitiativeViewModel(TestData.TestCharacters.DataStore, character, new ParticipantInitiative { InitiativeRoll = roll });
         }
 
         public static IParticipantInitiativeViewModel CreateParticipant(string alias, int initScore, int initDice, InitiativeRoll? roll = null, int edge = 1, int reaction = 1, int intuition = 1)

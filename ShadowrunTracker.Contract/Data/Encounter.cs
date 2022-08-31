@@ -4,6 +4,7 @@
     using System.Runtime.Serialization;
 
     [DataContract]
+    [TypeDiscriminator(1)]
     public class Encounter : RecordBase
     {
         [DataMember]

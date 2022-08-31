@@ -42,8 +42,81 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
-        <v:NewCharacterEntryView x:Name="CharacterHost" />
-        <ListBox Name="InitiativesList" ItemsSource="{Binding Initiatives}" Grid.Row="2" >
+        <Border Grid.Row="0" Margin="2" Padding="3" BorderThickness="1" BorderBrush="Black">
+            <mui:SimpleStackPanel Orientation="Horizontal" Spacing="8" FlowDirection="LeftToRight">
+                <Label FontWeight="Bold">Alias</Label>
+                <TextBox x:Name="Alias" MinWidth="150"
+                        Text="{Binding Alias, UpdateSourceTrigger=LostFocus}"
+                        materialDesign:HintAssist.Hint="Character Name"
+                        Style="{DynamicResource MaterialDesignFloatingHintTextBox}"/>
+                <Label FontWeight="Bold">Edge</Label>
+                <mah:NumericUpDown Name="BaseEdge" Minimum="1" />
+                <Separator Width="2" VerticalAlignment="Stretch" Background="Transparent" BorderBrush="Transparent" />
+                <ToggleButton Name="IsPlayerCheck" 
+                            HorizontalAlignment="Right"
+                            Style="{StaticResource MaterialDesignSwitchToggleButton}"></ToggleButton>
+                <StackPanel x:Name="PlayerPanel"
+                        Orientation="Horizontal">
+                    <Label FontWeight="Bold" HorizontalAlignment="Right" >Player</Label>
+                    <TextBox MinWidth="150" x:Name="PlayerName"
+                            Style="{DynamicResource MaterialDesignFloatingHintTextBox}"
+                            materialDesign:HintAssist.Hint="Player Name">
+                    </TextBox>
+                </StackPanel>
+                <Label Target="{Binding ElementName=PainResistenceCombo}">Pain Tol.</Label>
+                <ComboBox x:Name="PainResistenceCombo"
+                        MinWidth="32"
+                        HorizontalContentAlignment="Right"
+                        ItemsSource="{StaticResource PainResistenceList}" />
+                <CheckBox x:Name="PainEditor">Pain Editor</CheckBox>
+            </mui:SimpleStackPanel>
+        </Border>
+        <Grid Grid.Row="1" Margin="2">
+            <Grid.Resources>
+                <Style TargetType="Label">
+                    <Setter Property="HorizontalAlignment" Value="Center" />
+                    <Setter Property="FontWeight" Value="Bold" />
+                </Style>
+            </Grid.Resources>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition  />
+                <RowDefinition  />
+            </Grid.RowDefinitions>
+            <Label Grid.Column="0" Grid.Row="0" >Body</Label>
+            <mah:NumericUpDown Grid.Column="0" Grid.Row="1" x:Name="BaseBody" Minimum="1" Maximum="64" ></mah:NumericUpDown>
+
+            <Label Grid.Column="1" Grid.Row="0" >Agility</Label>
+            <mah:NumericUpDown Grid.Column="1" Grid.Row="1" x:Name="BaseAgility" Minimum="1" Maximum="64" ></mah:NumericUpDown>
+
+            <Label Grid.Column="2" Grid.Row="0" >Reaction</Label>
+            <mah:NumericUpDown Grid.Column="2" Grid.Row="1" x:Name="BaseReaction" Minimum="1" Maximum="64" ></mah:NumericUpDown>
+
+            <Label Grid.Column="3" Grid.Row="0" >Strength</Label>
+            <mah:NumericUpDown Grid.Column="3" Grid.Row="1" x:Name="BaseStrength" Minimum="1" Maximum="64" ></mah:NumericUpDown>
+
+            <Label Grid.Column="4" Grid.Row="0" >Charisma</Label>
+            <mah:NumericUpDown Grid.Column="4" Grid.Row="1" x:Name="BaseCharisma" Minimum="1" Maximum="64" ></mah:NumericUpDown>
+
+            <Label Grid.Column="5" Grid.Row="0" >Intuition</Label>
+            <mah:NumericUpDown Grid.Column="5" Grid.Row="1" x:Name="BaseIntuition" Minimum="1" Maximum="64" ></mah:NumericUpDown>
+
+            <Label Grid.Column="6" Grid.Row="0" >Logic</Label>
+            <mah:NumericUpDown Grid.Column="6" Grid.Row="1" x:Name="BaseLogic" Minimum="1" Maximum="64" ></mah:NumericUpDown>
+
+            <Label Grid.Column="7" Grid.Row="0" >Willpower</Label>
+            <mah:NumericUpDown Grid.Column="7" Grid.Row="1" x:Name="BaseWillpower" Minimum="1" Maximum="64" ></mah:NumericUpDown>
+        </Grid>
+        <ListBox Name="InitiativesList" Grid.Row="2" >
             <ListBox.Style>
                 <Style TargetType="ListBox" >
                     <Setter Property="KeyboardNavigation.TabNavigation" Value="Continue" />
@@ -85,14 +158,12 @@
                     Margin="8 5"
                     Width="76"
                     IsCancel="True"
-                    Style="{StaticResource MaterialDesignPaperButton}"
-                    Command="{Binding CancelCommand}">Cancel</Button>
+                    Style="{StaticResource MaterialDesignPaperButton}">Cancel</Button>
             <Button x:Name="okButton" Grid.Column="2"
                     Margin="8 5"
                     Width="76"
                     IsDefault="True"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Command="{Binding OkCommand}">Create</Button>
+                    Style="{StaticResource MaterialDesignRaisedButton}">Create</Button>
         </Grid>
     </Grid>
 </rxui:ReactiveUserControl>

@@ -1,26 +1,10 @@
 ﻿#nullable disable
-
-using ReactiveUI;
-using ShadowrunTracker.Model;
-using ShadowrunTracker.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-
 namespace ShadowrunTracker.Wpf.Views
 {
+    using ReactiveUI;
+    using ShadowrunTracker.ViewModels;
+    using System.Reactive.Disposables;
+
     /// <summary>
     /// Interaction logic for RequestInitiativesView.xaml
     /// </summary>
@@ -32,6 +16,12 @@ namespace ShadowrunTracker.Wpf.Views
 
             this.WhenActivated(d =>
             {
+                this.OneWayBind(ViewModel, vm => vm.Participants, v => v.ParticipantsList.ItemsSource)
+                    .DisposeWith(d);
+
+                this.BindCommand(ViewModel, vm => vm.RollAll, v => v.RollAllButton)
+                    .DisposeWith(d);
+
                 this.BindCommand(ViewModel, vm => vm.CancelCommand, v => v.CancelButton)
                     .DisposeWith(d);
 

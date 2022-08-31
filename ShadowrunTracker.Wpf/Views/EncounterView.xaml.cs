@@ -22,7 +22,7 @@ namespace ShadowrunTracker.Wpf.Views
     /// <summary>
     /// Interaction logic for EncounterView.xaml
     /// </summary>
-    public partial class EncounterView : ReactiveUserControl<IEncounterViewModel>
+    public partial class EncounterView : ReactiveUserControl<IGmEncounterViewModel>
     {
         private readonly IViewModelFactory _viewModelFactory;
         private IDrawerManager _drawerManager;
@@ -85,7 +85,7 @@ namespace ShadowrunTracker.Wpf.Views
                     //    .Subscribe(x => { })
                     //    .DisposeWith(d);
 
-                    ViewModel.AddParticipant(Mock.TestData.TestCharacters.CreateViewModel("Bob", 12, 2));
+                    //ViewModel.AddParticipant(Mock.TestData.TestCharacters.CreateViewModel("Bob", 12, 2));
 
                     this.OneWayBind(ViewModel, vm => vm.Participants, v => v.ParticipantsList.ItemsSource)
                         .DisposeWith(d);
@@ -105,20 +105,6 @@ namespace ShadowrunTracker.Wpf.Views
                     context.SetOutput(initiatives);
                 })
                 .Select(x => Unit.Default);
-
-            //DialogHost.Show(_requestInitiativesViewModel);//, "WindowDialogHost");
-            //_dockContexts.AddOrUpdate(Dock.Left, _requestInitiativesViewModel, (d, vm) => { vm.Cancel(); return _requestInitiativesViewModel; });
-            //EncounterDrawerHost.IsLeftDrawerOpen = true;
-
-            //return _requestInitiativesViewModel.Start(context.Input)
-            //    .Do(initiatives =>
-            //    {
-            //        _dockContexts.Remove(Dock.Left, out var _);
-            //        EncounterDrawerHost.IsLeftDrawerOpen = false;
-            //        //DialogHost.Close(null);
-            //        context.SetOutput(initiatives);
-            //    })
-            //    .Select(x => Unit.Default);
         }
 
         private IObservable<Unit> GetNewCharacter(InteractionContext<ImportMode, ICharacterViewModel> context)
@@ -141,29 +127,12 @@ namespace ShadowrunTracker.Wpf.Views
                     context.SetOutput(character);
                 }
                 ).Select(x => Unit.Default);
-
-            //_dockContexts.AddOrUpdate(Dock.Bottom, _newCharacterViewModel, (d, vm) =>
-            //{
-            //    vm.Cancel();
-            //    return _newCharacterViewModel;
-            //});
-
-            //EncounterDrawerHost.IsBottomDrawerOpen = true;
-
-            //return _newCharacterViewModel.Start()
-            //    .Do(character =>
-            //    {
-            //        _dockContexts.Remove(Dock.Bottom, out var _);
-            //        EncounterDrawerHost.IsBottomDrawerOpen = false;
-            //        context.SetOutput(character);
-            //    }
-            //    ).Select(x => Unit.Default);
         }
 
         private IObservable<Unit> LoadCharacter(InteractionContext<ImportMode, ICharacterViewModel> context)
         {
             return Observable.Start(LoadCharacterFromFile, RxApp.MainThreadScheduler)
-                .Do(c => context.SetOutput(_viewModelFactory.Create(c)))
+                .Do(c => context.SetOutput(_viewModelFactory.Create<ICharacterViewModel, Character>(c)))
                 .Select(x => Unit.Default);
         }
 

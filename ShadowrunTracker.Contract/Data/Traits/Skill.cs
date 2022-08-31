@@ -4,6 +4,7 @@
     using System.Runtime.Serialization;
 
     [DataContract]
+    [TypeDiscriminator(8)]
     public class Skill : LeveledTrait
     {
         [DataMember]

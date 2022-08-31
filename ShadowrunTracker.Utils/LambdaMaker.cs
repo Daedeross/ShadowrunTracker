@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-
-namespace ShadowrunTracker.Utils
+﻿namespace ShadowrunTracker.Utils
 {
+    using System;
+    using System.Collections.Concurrent;
+    using System.Linq.Expressions;
+
     public static class LambdaMaker
     {
         private static readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, object>> _getterCache

@@ -5,6 +5,7 @@
     using System.Runtime.Serialization;
 
     [DataContract]
+    [TypeDiscriminator(4)]
     public class ParticipantInitiative : RecordBase
     {
         [DataMember]

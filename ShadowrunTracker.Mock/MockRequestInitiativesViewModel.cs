@@ -12,7 +12,7 @@ namespace ShadowrunTracker.Mock
     public class MockRequestInitiativesViewModel : RequestInitiativesViewModel
     {
         public MockRequestInitiativesViewModel()
-            : base(TestData.TestCharacters.DataStore, new ObservableCollectionExtended<ICharacterViewModel>(TestCharacters.TestGroup))
+            : base(MockViewModelFactory.Instance, new ObservableCollectionExtended<ICharacterViewModel>(TestCharacters.TestGroup))
         {
         }
     }

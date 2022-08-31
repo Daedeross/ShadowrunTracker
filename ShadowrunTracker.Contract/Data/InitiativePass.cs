@@ -5,6 +5,7 @@
     using System.Runtime.Serialization;
 
     [DataContract]
+    [TypeDiscriminator(5)]
     public class InitiativePass : RecordBase
     {
         [DataMember]

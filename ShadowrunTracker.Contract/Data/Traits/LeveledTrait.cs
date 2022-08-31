@@ -3,6 +3,7 @@
     using System.Runtime.Serialization;
 
     [DataContract]
+    [TypeDiscriminator(7)]
     public class LeveledTrait : Trait
     {
         [DataMember]

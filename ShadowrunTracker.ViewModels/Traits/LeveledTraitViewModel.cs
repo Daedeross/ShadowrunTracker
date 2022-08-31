@@ -3,15 +3,28 @@
     using ReactiveUI;
     using ShadowrunTracker.Data.Traits;
     using ShadowrunTracker.Utils;
+    using System.Collections.Generic;
     using System.Reactive.Disposables;
 
     public class LeveledTraitViewModel : TraitViewModel, ILeveledTraitViewModel
     {
-        public LeveledTraitViewModel(LeveledTrait trait)
-            : base(trait)
+        protected static readonly ISet<string> _leveledTraitRecordProperties;
+
+        static LeveledTraitViewModel()
         {
-            m_BaseRating = trait.BaseRating;
-            m_BonusRating = trait.BonusRating;
+            _leveledTraitRecordProperties = new HashSet<string>
+            {
+                nameof(BaseRating),
+                nameof(BonusRating),
+            };
+            _leveledTraitRecordProperties.UnionWith(_traitRecordProperties);
+        }
+
+        public LeveledTraitViewModel(LeveledTrait record)
+            : base(record)
+        {
+            m_BaseRating = record.BaseRating;
+            m_BonusRating = record.BonusRating;
 
             _augmentedRating = this.WhenAnyValue(x => x.BaseRating, x => x.BonusRating, (baseRating, bonusRating) => baseRating + bonusRating)
                 .ToProperty(this, x => x.AugmentedRating)
@@ -37,7 +50,20 @@
 
         protected void Update(LeveledTrait record)
         {
-            base.Update(record);
+            try
+            {
+                PushUpdate = false;
+                DoUpdate(record);
+            }
+            finally
+            {
+                PushUpdate = true;
+            }
+        }
+
+        protected void DoUpdate(LeveledTrait record)
+        {
+            base.DoUpdate(record);
             BaseRating = record.BaseRating;
             BonusRating = record.BonusRating;
         }

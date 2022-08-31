@@ -4,6 +4,7 @@
     using System.Runtime.Serialization;
 
     [DataContract]
+    [TypeDiscriminator(3)]
     public class CombatRound : RecordBase
     {
         [DataMember]
