@@ -7,13 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Castle.Windsor" Version="5.1.1" />
+    <PackageReference Include="Castle.Windsor" Version="5.1.2" />
+    <PackageReference Include="ReactiveUI.Validation" Version="3.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ShadowrunTracker.Contract\ShadowrunTracker.Contract.csproj" />
-    <ProjectReference Include="..\ShadowrunTracker.Data\ShadowrunTracker.Data.csproj" />
     <ProjectReference Include="..\ShadowrunTracker.Utils\ShadowrunTracker.Utils.csproj" />
+    <ProjectReference Include="..\ShadowrunTracker.ViewModels.Contract\ShadowrunTracker.ViewModels.Contract.csproj" />
   </ItemGroup>
 
 </Project>

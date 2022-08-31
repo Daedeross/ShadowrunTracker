@@ -1,21 +1,22 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.Data;
-using ShadowrunTracker.Model;
-using ShadowrunTracker.Utils;
-using ShadowrunTracker.ViewModels.Internal;
-using ShadowrunTracker.ViewModels.Traits;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Windows.Input;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using ReactiveUI;
+    using ShadowrunTracker.Data;
+    using ShadowrunTracker.Data.Traits;
+    using ShadowrunTracker.Model;
+    using ShadowrunTracker.Utils;
+    using ShadowrunTracker.ViewModels.Internal;
+    using ShadowrunTracker.ViewModels.Traits;
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.Collections.Specialized;
+    using System.ComponentModel;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
+    using System.Reactive.Disposables;
+    using System.Windows.Input;
+
     public class CharacterViewModel : CanRequestConfirmationBase, ICharacterViewModel
     {
         public const int BlitzDice = 5;
@@ -27,8 +28,36 @@ namespace ShadowrunTracker.ViewModels
         public const int BaseMatrixHotInitiativeDice = 4;
         public const int PenaltyPerSpell = -2;
 
-        private readonly Dictionary<IImprovementViewModel, BonusHandler> _bonusHandlers;
+        private static readonly ISet<string> RecordProperties = new HashSet<string>()
+        {
+            nameof(Id),
+            nameof(Alias),
+            nameof(IsPlayer),
+            nameof(Player),
+            nameof(Essence),
+            nameof(BaseBody),
+            nameof(BaseAgility),
+            nameof(BaseReaction),
+            nameof(BaseStrength),
+            nameof(BaseCharisma),
+            nameof(BaseIntuition),
+            nameof(BaseLogic),
+            nameof(BaseWillpower),
+            nameof(Edge),
+            nameof(Magic),
+            nameof(Resonance),
+            nameof(PainEditor),
+            nameof(PainResistence),
+            nameof(SpellsSustained),
+            nameof(Skills),
+            nameof(Improvements)
+        };
 
+        private readonly Dictionary<IImprovementViewModel, BonusHandler> _bonusHandlers;
+        private readonly IDataStore<Guid> _store;
+        private readonly IViewModelFactory _viewModelFactory;
+
+        private bool _pushUpdate = true;
         private string? _filename;
 
         private IRoller _roller;
@@ -39,32 +68,34 @@ namespace ShadowrunTracker.ViewModels
 
         public bool IsChanged { get; set; }
 
-        public CharacterViewModel(IRoller roller)
+        public CharacterViewModel(IRoller roller, IDataStore<Guid> store, IViewModelFactory viewModelFactory)
         {
             _roller = roller ?? throw new ArgumentNullException(nameof(roller));
+            _store = store;
+            _viewModelFactory = viewModelFactory;
 
-            _id        = Guid.NewGuid();
-            m_Alias    = string.Empty;
+            _id = Guid.NewGuid();
+            m_Alias = string.Empty;
             m_IsPlayer = false;
-            m_Player   = string.Empty;
+            m_Player = string.Empty;
 
             m_Essence = 6m;
 
-            m_BaseBody      = 1;
-            m_BaseAgility   = 1;
-            m_BaseReaction  = 1;
-            m_BaseStrength  = 1;
-            m_BaseCharisma  = 1;
+            m_BaseBody = 1;
+            m_BaseAgility = 1;
+            m_BaseReaction = 1;
+            m_BaseStrength = 1;
+            m_BaseCharisma = 1;
             m_BaseIntuition = 1;
-            m_BaseLogic     = 1;
+            m_BaseLogic = 1;
             m_BaseWillpower = 1;
 
-            m_BaseEdge      = 1;
-            m_BaseMagic     = 0;
+            m_BaseEdge = 1;
+            m_BaseMagic = 0;
             m_BaseResonance = 0;
 
-            m_PainEditor      = false;
-            m_PainResistence  = 0;
+            m_PainEditor = false;
+            m_PainResistence = 0;
             m_SpellsSustained = 0;
 
             Skills = new ObservableCollection<ISkillViewModel>();
@@ -78,38 +109,47 @@ namespace ShadowrunTracker.ViewModels
                 .DisposeWith(_disposables);
             RemoveCharacter = ReactiveCommand.Create(RemoveCharacterExecute)
                 .DisposeWith(_disposables);
+
+            PropertyChanged += OnPropertyChanged;
         }
 
-        public CharacterViewModel(IRoller roller, ICharacter loader)
+        public CharacterViewModel(IRoller roller, IDataStore<Guid> store, IViewModelFactory viewModelFactory, [NotNull] Character record)
         {
+            if (record is null)
+            {
+                throw new ArgumentNullException(nameof(record));
+            }
+
             _roller = roller ?? throw new ArgumentNullException(nameof(roller));
+            _store = store;
+            _viewModelFactory = viewModelFactory;
 
-            _id        = loader.Id == Guid.Empty ? Guid.NewGuid() : loader.Id;
-            m_Alias    = loader.Alias;
-            m_IsPlayer = loader.IsPlayer;
-            m_Player   = loader.Player;
+            _id = record.Id == Guid.Empty ? Guid.NewGuid() : record.Id;
+            m_Alias = record.Alias ?? string.Empty;
+            m_IsPlayer = record.IsPlayer;
+            m_Player = record.Player ?? string.Empty;
 
-            m_Essence = loader.Essence;
+            m_Essence = record.Essence;
 
-            m_BaseBody      = loader.BaseBody;
-            m_BaseAgility   = loader.BaseAgility;
-            m_BaseReaction  = loader.BaseReaction;
-            m_BaseStrength  = loader.BaseStrength;
-            m_BaseCharisma  = loader.BaseCharisma;
-            m_BaseIntuition = loader.BaseIntuition;
-            m_BaseLogic     = loader.BaseLogic;
-            m_BaseWillpower = loader.BaseWillpower;
+            m_BaseBody = record.BaseBody;
+            m_BaseAgility = record.BaseAgility;
+            m_BaseReaction = record.BaseReaction;
+            m_BaseStrength = record.BaseStrength;
+            m_BaseCharisma = record.BaseCharisma;
+            m_BaseIntuition = record.BaseIntuition;
+            m_BaseLogic = record.BaseLogic;
+            m_BaseWillpower = record.BaseWillpower;
 
-            m_BaseEdge      = loader.Edge;
-            m_BaseMagic     = loader.Magic;
-            m_BaseResonance = loader.Resonance;
+            m_BaseEdge = record.Edge;
+            m_BaseMagic = record.Magic;
+            m_BaseResonance = record.Resonance;
 
-            m_PainEditor      = loader.PainEditor;
-            m_PainResistence  = loader.PainResistence;
-            m_SpellsSustained = loader.SpellsSustained;
+            m_PainEditor = record.PainEditor;
+            m_PainResistence = record.PainResistence;
+            m_SpellsSustained = record.SpellsSustained;
 
-            Skills       = new ObservableCollection<ISkillViewModel>(loader.Skills.Select(s => (ISkillViewModel)new SkillViewModel(s)));
-            Improvements = new ObservableCollection<IImprovementViewModel>(loader.Improvements.Select(i => (IImprovementViewModel)new ImprovementViewModel(i)));
+            Skills = new ObservableCollection<ISkillViewModel>(record.Skills.Select(s => (ISkillViewModel)new SkillViewModel(s)));
+            Improvements = new ObservableCollection<IImprovementViewModel>(record.Improvements.Select(i => (IImprovementViewModel)new ImprovementViewModel(i)));
             Improvements.CollectionChanged += OnImprovementsChanged;
             _bonusHandlers = Improvements.ToDictionary(
                 imp => imp,
@@ -119,6 +159,8 @@ namespace ShadowrunTracker.ViewModels
                 .DisposeWith(_disposables);
             RemoveCharacter = ReactiveCommand.Create(RemoveCharacterExecute)
                 .DisposeWith(_disposables);
+
+            PropertyChanged += OnPropertyChanged;
         }
 
         private void OnImprovementsChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -138,7 +180,7 @@ namespace ShadowrunTracker.ViewModels
                 foreach (IImprovementViewModel item in e.NewItems)
                 {
                     _bonusHandlers.Add(item, new BonusHandler(this, item));
-                } 
+                }
             }
         }
 
@@ -815,9 +857,132 @@ namespace ShadowrunTracker.ViewModels
                 .DisposeWith(_disposables);
         }
 
-        public ICharacter ToRecord()
+        RecordBase IRecordViewModel.Record => ToRecord();
+
+        public Character Record => ToRecord();
+
+        public Character ToRecord()
         {
             return this.ToModel();
+        }
+
+        public void Update(Character record)
+        {
+            try
+            {
+                _pushUpdate = false;
+
+                if (record.Id != Id)
+                {
+                    throw new ArgumentException("Record and VM Ids do not match");
+                }
+
+                Alias = record.Alias ?? string.Empty;
+                IsPlayer = record.IsPlayer;
+                Player = record.Player ?? string.Empty;
+                Essence = record.Essence;
+                BaseBody = record.BaseBody;
+                BaseAgility = record.BaseAgility;
+                BaseReaction = record.BaseReaction;
+                BaseStrength = record.BaseStrength;
+                BaseCharisma = record.BaseCharisma;
+                BaseIntuition = record.BaseIntuition;
+                BaseLogic = record.BaseLogic;
+                BaseWillpower = record.BaseWillpower;
+                m_BaseEdge = record.Edge;
+                m_BaseMagic = record.Magic;
+                m_BaseResonance = record.Resonance;
+                PainEditor = record.PainEditor;
+                PainResistence = record.PainResistence;
+                SpellsSustained = record.SpellsSustained;
+                UpdateSkills(record.Skills);
+                UpdateImprovements(record.Improvements);
+            }
+            finally
+            {
+                _pushUpdate = true;
+            }
+        }
+
+        private void UpdateSkills(IEnumerable<Skill> incomming)
+        {
+            var oldMap = Skills.ToDictionary(p => p.Id);
+            var newMap = incomming.ToDictionary(p => p.Id); ;
+
+            var removed = oldMap.Values.Where(vm => !newMap.ContainsKey(vm.Id));
+            var added = newMap.Values.Where(record => !oldMap.ContainsKey(record.Id));
+            var update = newMap.Join(oldMap, kvp => kvp.Key, kvp => kvp.Key, (inc, old) => (inc.Value, old.Value));
+
+            RemoveSkills(removed);
+
+            foreach (var (record, viewModel) in update)
+            {
+                viewModel.Update(record);
+            }
+
+            AddSkillsFromRecords(added);
+        }
+
+        private void AddSkillsFromRecords(IEnumerable<Skill> added)
+        {
+            if (added.Any())
+            {
+                foreach (var record in added)
+                {
+                    Skills.Add(_store.CreateOrUpdate(record, s => new SkillViewModel(s)));
+                }
+            }
+        }
+
+        private void RemoveSkills(IEnumerable<ISkillViewModel> removed)
+        {
+            if (removed.Any())
+            {
+                foreach (var vm in removed)
+                {
+                    Skills.Remove(vm);
+                }
+            }
+        }
+        private void UpdateImprovements(IEnumerable<Improvement> incomming)
+        {
+            var oldMap = Improvements.ToDictionary(p => p.Id);
+            var newMap = incomming.ToDictionary(p => p.Id); ;
+
+            var removed = oldMap.Values.Where(vm => !newMap.ContainsKey(vm.Id));
+            var added = newMap.Values.Where(record => !oldMap.ContainsKey(record.Id));
+            var update = newMap.Join(oldMap, kvp => kvp.Key, kvp => kvp.Key, (inc, old) => (inc.Value, old.Value));
+
+            RemoveImprovements(removed);
+
+            foreach (var (record, viewModel) in update)
+            {
+                viewModel.Update(record);
+            }
+
+            AddImprovementsFromRecords(added);
+        }
+
+        private void AddImprovementsFromRecords(IEnumerable<Improvement> added)
+        {
+            if (added.Any())
+            {
+                foreach (var record in added)
+                {
+                    Improvements.Add(_store.CreateOrUpdate(record, s => _viewModelFactory.Create<IImprovementViewModel, Improvement>(s)));
+                }
+            }
+        }
+
+        private void RemoveImprovements(IEnumerable<IImprovementViewModel> removed)
+        {
+            if (removed.Any())
+            {
+                foreach (var vm in removed)
+                {
+                    Improvements.Remove(vm);
+                }
+            }
         }
 
         #endregion
@@ -841,7 +1006,30 @@ namespace ShadowrunTracker.ViewModels
         {
             Remove?.Invoke(this, new RemoveCharacterEventArgs(this));
         }
+        private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (_pushUpdate && ReferenceEquals(this, sender) && RecordProperties.Contains(e.PropertyName))
+            {
+                this.RaisePropertyChanged(nameof(Record));
+            }
+        }
 
         #endregion
+
+        private bool disposedValue;
+
+        protected override void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    this.PropertyChanged -= OnPropertyChanged;
+                }
+
+                disposedValue = true;
+            }
+            base.Dispose(disposing);
+        }
     }
 }

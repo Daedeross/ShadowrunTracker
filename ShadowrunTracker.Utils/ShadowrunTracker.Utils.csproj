@@ -7,12 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ReactiveUI" Version="17.1.50" />
+    <PackageReference Include="Castle.Core" Version="4.4.1" />
+    <PackageReference Include="ReactiveUI" Version="18.3.1" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ShadowrunTracker.Contract\ShadowrunTracker.Contract.csproj" />
+    <ProjectReference Include="..\ShadowrunTracker.ViewModels.Contract\ShadowrunTracker.ViewModels.Contract.csproj" />
   </ItemGroup>
 
 </Project>

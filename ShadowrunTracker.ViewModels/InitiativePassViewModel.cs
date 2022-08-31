@@ -1,50 +1,40 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.Model;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Text;
-using System.Windows.Input;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using ReactiveUI;
+    using ShadowrunTracker.Data;
+    using ShadowrunTracker.Model;
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.Collections.Specialized;
+    using System.ComponentModel;
+    using System.Linq;
+    using System.Reactive.Disposables;
+    using System.Reactive.Linq;
+    using System.Windows.Input;
+
     public class InitiativePassViewModel : ViewModelBase, IInitiativePassViewModel
     {
+        private static readonly ISet<string> _recordProperties = new HashSet<string>
+        {
+            nameof(ActiveParticipant)
+        };
+
+        private readonly IDataStore<Guid> _store;
         private readonly List<IParticipantInitiativeViewModel> _acted;
         private readonly List<IParticipantInitiativeViewModel> _notActed;
         private readonly List<IParticipantInitiativeViewModel> _notActing;
 
-        public InitiativePassViewModel()
+        private bool _pushUpdate = true;
+
+        public InitiativePassViewModel(IDataStore<Guid> store,
+            IEnumerable<IParticipantInitiativeViewModel>? participants = null,
+            InitiativePass? record = null)
         {
-            Participants = new ObservableCollection<IParticipantInitiativeViewModel>();
+            _store = store;
 
-            _acted = new List<IParticipantInitiativeViewModel>();
-            _notActed = new List<IParticipantInitiativeViewModel>();
-            _notActing = new List<IParticipantInitiativeViewModel>();
-
-            var queryDamage = ReactiveCommand.Create<ICharacterViewModel>(QueryDamageExecute);
-            var delayAction = ReactiveCommand.Create<IParticipantInitiativeViewModel>(DelayActionExecute);
-            var next = ReactiveCommand.Create(Next);
-
-            _disposables.Add(queryDamage);
-            _disposables.Add(delayAction);
-            _disposables.Add(next);
-
-            QueryDamageCommand = queryDamage;
-            DelayActionCommand = delayAction;
-            NextCommand = next;
-
-            Participants.CollectionChanged += OnParcicipantsChanged;
-        }
-
-        public InitiativePassViewModel(IEnumerable<IParticipantInitiativeViewModel> participants)
-        {
-            var sorted = participants.ToList();
+            Id = record?.Id ?? Guid.NewGuid();
+            var sorted = participants?.ToList() ?? new List<IParticipantInitiativeViewModel>();
             sorted.Sort(ParticipantInitiativeReverseComparer.Default);
 
             Participants = new ObservableCollection<IParticipantInitiativeViewModel>(sorted);
@@ -55,20 +45,27 @@ namespace ShadowrunTracker.ViewModels
 
             ActiveParticipant = _notActed.FirstOrDefault();
 
-            var queryDamage = ReactiveCommand.Create<ICharacterViewModel>(QueryDamageExecute);
-            var delayAction = ReactiveCommand.Create<IParticipantInitiativeViewModel>(DelayActionExecute);
-            var next = ReactiveCommand.Create(Next);
-
-            _disposables.Add(queryDamage);
-            _disposables.Add(delayAction);
-            _disposables.Add(next);
-
-            QueryDamageCommand = queryDamage;
-            DelayActionCommand = delayAction;
-            NextCommand = next;
+            QueryDamageCommand = ReactiveCommand.Create<ICharacterViewModel>(QueryDamageExecute)
+                .DisposeWith(_disposables);
+            DelayActionCommand = ReactiveCommand.Create<IParticipantInitiativeViewModel>(DelayActionExecute)
+                .DisposeWith(_disposables);
+            NextCommand = ReactiveCommand.Create(Next)
+                .DisposeWith(_disposables);
 
             Participants.CollectionChanged += OnParcicipantsChanged;
+
+            if (record != null)
+            {
+                Update(record);
+            }
+
+            PropertyChanged += OnPropertyChanged;
         }
+
+        #region Properties
+
+        public Guid Id { get; }
+        public int Index { get; set; }
 
         public ObservableCollection<IParticipantInitiativeViewModel> Participants { get; }
 
@@ -92,67 +89,94 @@ namespace ShadowrunTracker.ViewModels
 
         #endregion
 
-        public void Next()
-        {
-            if (ActiveParticipant != null)
-            {
-                ActiveParticipant.Acted = true;
-                _notActed.Remove(ActiveParticipant);
-                _acted.Add(ActiveParticipant);
-            }
-
-            if (_notActed.Any())
-            {
-                ActiveParticipant = _notActed.OrderBy(x => x, ParticipantInitiativeReverseComparer.Default).FirstOrDefault();
-            }
-            else
-            {
-                PassCompleted?.Invoke(this, EventArgs.Empty);
-            }
-        }
 
         public event EventHandler<EventArgs>? PassCompleted;
 
-        private void OnParcicipantsChanged(object sender, NotifyCollectionChangedEventArgs e)
+        #endregion
+
+        #region IRecordViewModel implementation
+
+        RecordBase IRecordViewModel.Record => ToRecord();
+
+        public InitiativePass Record => ToRecord();
+
+        public InitiativePass ToRecord()
         {
-            if (e.OldItems != null)
+            return new InitiativePass
             {
-                foreach (IParticipantInitiativeViewModel item in e.OldItems)
+                Id = Id,
+                Index = Index,
+                ParticipantIds = Participants.Select(p => p.Id).ToList(),
+                ActiveParticipantIndex = ActiveParticipant == null ? -1 : Participants.IndexOf(ActiveParticipant)
+            };
+        }
+
+        public void Update(InitiativePass record)
+        {
+            try
+            {
+                _pushUpdate = false;
+
+                if (record.Id != Id)
                 {
-                    RemoveParticipant(item);
+                    throw new ArgumentException($"Record id does not match: ViewModel Id: {Id} | Record Id: {record.Id}", nameof(record));
                 }
+                UpdateParticipants(record.ParticipantIds);
+
+                ActiveParticipant = record.ActiveParticipantIndex >= 0
+                    ? Participants[record.ActiveParticipantIndex]
+                    : null;
             }
-            if (e.NewItems != null)
+            finally
             {
-                foreach (IParticipantInitiativeViewModel item in e.NewItems)
+                _pushUpdate = true;
+            }
+        }
+
+        private void UpdateParticipants(IEnumerable<Guid> incomming)
+        {
+            var oldIds = Participants.Select(p => p.Id).ToList();
+
+            var removed = oldIds.Except(incomming);
+            var added = incomming.Except(oldIds);
+
+            RemoveParticipantsById(removed);
+            AddParticipantsById(added);
+        }
+
+        private void RemoveParticipantsById(IEnumerable<Guid> ids)
+        {
+            foreach (var id in ids)
+            {
+                var vm = _store.TryGet<IParticipantInitiativeViewModel>(id);
+                if (vm.HasValue)
                 {
-                    AddParticipant(item);
+                    Participants.Remove(vm.Value);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Id {id} not found in store");
                 }
             }
         }
 
-        public void RemoveParticipant(IParticipantInitiativeViewModel participant)
+        private void AddParticipantsById(IEnumerable<Guid> ids)
         {
-            participant.PropertyChanged -= OnParticipantPropertyChanged;
-            _acted.Remove(participant);
-            _notActed.Remove(participant);
-            _notActing.Remove(participant);
-        }
-
-        public void AddParticipant(IParticipantInitiativeViewModel participant)
-        {
-            participant.PropertyChanged += OnParticipantPropertyChanged;
-        }
-
-        private void OnParticipantPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e is IParticipantInitiativeViewModel participant)
+            foreach (var id in ids)
             {
-                if (e.PropertyName == nameof(IParticipantInitiativeViewModel.InitiativeScore))
+                var vm = _store.TryGet<IParticipantInitiativeViewModel>(id);
+                if (vm.HasValue)
                 {
+                    Participants.Add(vm.Value);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Id {id} not found in _store");
                 }
             }
         }
+
+        #endregion
 
         #region Commands
 
@@ -237,6 +261,31 @@ namespace ShadowrunTracker.ViewModels
 
         #endregion
 
+        #region Next Command
+
+        public ICommand NextCommand { get; }
+
+        public void Next()
+        {
+            if (ActiveParticipant != null)
+            {
+                ActiveParticipant.Acted = true;
+                _notActed.Remove(ActiveParticipant);
+                _acted.Add(ActiveParticipant);
+            }
+
+            if (_notActed.Any())
+            {
+                ActiveParticipant = _notActed.OrderBy(x => x, ParticipantInitiativeReverseComparer.Default).FirstOrDefault();
+            }
+            else
+            {
+                PassCompleted?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        #endregion
+
         private void CleanupFlyoutContext()
         {
             RightFlyoutContext = null;
@@ -244,9 +293,82 @@ namespace ShadowrunTracker.ViewModels
 
         #endregion
 
-        #region Next Command
+        #region Callbacks
 
-        public ICommand NextCommand { get; }
+        private void OnParcicipantsChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            bool changed = false;
+            if (e.OldItems != null)
+            {
+                foreach (IParticipantInitiativeViewModel item in e.OldItems)
+                {
+                    changed = true;
+                    OnRemoveParticipant(item);
+                }
+            }
+            if (e.NewItems != null)
+            {
+                foreach (IParticipantInitiativeViewModel item in e.NewItems)
+                {
+                    changed = true;
+                    OnAddParticipant(item);
+                }
+            }
+            if (_pushUpdate && changed)
+            {
+                this.RaisePropertyChanged(nameof(Record));
+            }
+        }
+
+        public void OnRemoveParticipant(IParticipantInitiativeViewModel participant)
+        {
+            participant.PropertyChanged -= OnParticipantPropertyChanged;
+            _acted.Remove(participant);
+            _notActed.Remove(participant);
+            _notActing.Remove(participant);
+        }
+
+        public void OnAddParticipant(IParticipantInitiativeViewModel participant)
+        {
+            participant.PropertyChanged += OnParticipantPropertyChanged;
+        }
+
+        private void OnParticipantPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e is IParticipantInitiativeViewModel participant)
+            {
+                if (e.PropertyName == nameof(IParticipantInitiativeViewModel.InitiativeScore))
+                {
+                }
+            }
+        }
+
+        private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (_pushUpdate && ReferenceEquals(this, sender) && _recordProperties.Contains(e.PropertyName))
+            {
+                this.RaisePropertyChanged(nameof(Record));
+            }
+        }
+
+        #endregion
+
+        #region IDisposable
+
+        private bool disposedValue;
+        protected override void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    PropertyChanged -= OnPropertyChanged;
+                }
+
+                disposedValue = true;
+            }
+            base.Dispose(disposing);
+        }
 
         #endregion
     }

@@ -1,4 +1,5 @@
 ﻿using ShadowrunTracker.Data;
+using ShadowrunTracker.Data.Traits;
 using ShadowrunTracker.Model;
 using ShadowrunTracker.Utils;
 using ShadowrunTracker.ViewModels;
@@ -9,14 +10,16 @@ namespace ShadowrunTracker.Mock.TestData
 {
     public static class TestCharacters
     {
-        public static ICharacter Create(string alias, int initScore, int initDice, int edge = 1, int reaction = 1, int intuition = 1)
+        public static IDataStore<Guid> DataStore = TestData.TestCharacters.DataStore;
+
+        public static Character Create(string alias, int initScore, int initDice, int edge = 1, int reaction = 1, int intuition = 1)
         {
             if (initDice < 1)
             {
                 throw new ArgumentOutOfRangeException(nameof(initDice));
             }
 
-            var improvements = new List<IImprovement>();
+            var improvements = new List<Improvement>();
             if (initScore != reaction + intuition)
             {
                 improvements.Add(new Improvement
@@ -52,12 +55,12 @@ namespace ShadowrunTracker.Mock.TestData
                 BaseWillpower = 1,
                 Edge = edge,
                 Improvements = improvements,
-                Skills = new List<ISkill>()
+                Skills = new List<Skill>()
             };
         }
 
         public static ICharacterViewModel CreateViewModel(string alias, int initScore, int initDice, int edge = 1, int reaction = 1, int intuition = 1)
-            => new CharacterViewModel(Roller.Default, Create(alias, initScore, initDice, edge, reaction, intuition));
+            => new CharacterViewModel(Roller.Default, TestData.TestCharacters.DataStore, new MockViewModelFactory(), Create(alias, initScore, initDice, edge, reaction, intuition));
 
         public static IParticipantInitiativeViewModel CreateParticipant(ICharacterViewModel character, InitiativeRoll? roll = null)
         {
@@ -72,7 +75,7 @@ namespace ShadowrunTracker.Mock.TestData
                 };
             }
 
-            return new ParticipantInitiativeViewModel(character, roll);
+            return new ParticipantInitiativeViewModel(TestData.TestCharacters.DataStore, character, new ParticipantInitiative { InitiativeRoll = roll });
         }
 
         public static IParticipantInitiativeViewModel CreateParticipant(string alias, int initScore, int initDice, InitiativeRoll? roll = null, int edge = 1, int reaction = 1, int intuition = 1)

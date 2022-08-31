@@ -1,14 +1,10 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.Model;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Reactive.Disposables;
-using System.Text;
-using System.Windows.Input;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using ReactiveUI;
+    using ShadowrunTracker.Model;
+    using System.Reactive.Disposables;
+    using System.Windows.Input;
+
     public class PendingParticipantInitiativeViewModel : ViewModelBase, IPendingParticipantInitiativeViewModel
     {
         public ICharacterViewModel Character { get; }

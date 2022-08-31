@@ -1,15 +1,9 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-using System.Text;
-using System.Windows.Input;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
-    public class DelayActionViewModel : ModalViewModelBase<IDelayActionViewModel>, IDelayActionViewModel
+    using ShadowrunTracker.Model;
+    using System.Collections.Generic;
+
+    public class DelayActionViewModel : DisposableModalViewModelBase<IDelayActionViewModel>, IDelayActionViewModel
     {
         private static IReadOnlyList<DelayAction> _delayActions = new List<DelayAction>
         {
@@ -26,7 +20,6 @@ namespace ShadowrunTracker.ViewModels
         };
 
         private bool _open = true;
-
 
         public IParticipantInitiativeViewModel Participant { get; }
         public IReadOnlyCollection<DelayAction> Actions => _delayActions;

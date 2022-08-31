@@ -1,14 +1,9 @@
-﻿using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Text;
-using System.Windows.Input;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
-    public class DamageHealingViewModel : ModalViewModelBase<IDamageHealingViewModel>, IDamageHealingViewModel, IDisposable
+    using ReactiveUI;
+    using System;
+
+    public class DamageHealingViewModel : DisposableModalViewModelBase<IDamageHealingViewModel>, IDamageHealingViewModel, IDisposable
     {
         private bool _open = true;
 

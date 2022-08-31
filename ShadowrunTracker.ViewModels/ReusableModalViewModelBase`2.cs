@@ -1,14 +1,11 @@
-﻿using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Text;
-using System.Windows.Input;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using ReactiveUI;
+    using System;
+    using System.Reactive.Disposables;
+    using System.Reactive.Subjects;
+    using System.Windows.Input;
+
     public abstract class ReusableModalViewModelBase<TInput, TOutput> : ViewModelBase, IReusableModalViewModel<TInput, TOutput>
     {
         protected Subject<TOutput>? _modalSubject;

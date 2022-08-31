@@ -1,31 +1,16 @@
-﻿using ShadowrunTracker.Data;
-using ShadowrunTracker.Model;
-using ShadowrunTracker.Utils;
+﻿using DynamicData.Binding;
+using ShadowrunTracker.Data;
 using ShadowrunTracker.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace ShadowrunTracker.Mock
 {
     public class MockViewModelFactory : IViewModelFactory
     {
-        public ICharacterViewModel Create(ICharacter character)
-        {
-            return new CharacterViewModel(Roller.Default, character);
-        }
+        public static IViewModelFactory Instance { get; } = new MockViewModelFactory();
 
-        public IParticipantInitiativeViewModel Create(ICharacterViewModel character, InitiativeRoll initiative)
-        {
-            return new ParticipantInitiativeViewModel(character, initiative);
-        }
-
-        public IInitiativePassViewModel CreatePass(IEnumerable<IParticipantInitiativeViewModel> participants)
-        {
-            return new InitiativePassViewModel(participants);
-        }
-
-        public IRequestInitiativesViewModel Create(IEnumerable<ICharacterViewModel> participants)
+        public IRequestInitiativesViewModel Create(IObservableCollection<ICharacterViewModel> characters)
         {
             throw new NotImplementedException();
         }
@@ -35,7 +20,7 @@ namespace ShadowrunTracker.Mock
             throw new NotImplementedException();
         }
 
-        public ICombatRoundViewModel CreateRound(IEnumerable<IParticipantInitiativeViewModel> participants)
+        public ICombatRoundViewModel CreateRound(IEnumerable<IParticipantInitiativeViewModel> characters)
         {
             return new MockCombatRoundViewModel();
         }
@@ -46,6 +31,38 @@ namespace ShadowrunTracker.Mock
             {
                 d.Dispose();
             }
+        }
+
+        public TViewModel Create<TViewModel, TRecord>(TRecord record)
+            where TViewModel : IRecordViewModel<TRecord>
+            where TRecord : RecordBase
+        {
+            throw new NotImplementedException();
+        }
+
+        public IPlayerEncounterViewModel CreatePlayerEncounter(Encounter encounter)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IInitiativePassViewModel CreatePass(IEnumerable<IParticipantInitiativeViewModel> participants)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IParticipantInitiativeViewModel Create(ICharacterViewModel character, ParticipantInitiative record)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ICombatRoundViewModel CreateRound(IEnumerable<IParticipantInitiativeViewModel>? participants = null, CombatRound? record = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IInitiativePassViewModel CreatePass(IEnumerable<IParticipantInitiativeViewModel>? participants = null, InitiativePass? record = null)
+        {
+            throw new NotImplementedException();
         }
     }
 }

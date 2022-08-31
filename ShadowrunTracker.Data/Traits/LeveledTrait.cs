@@ -1,10 +1,9 @@
-﻿using ShadowrunTracker.Data;
-using System.Runtime.Serialization;
-
-namespace ShadowrunTracker.Data.Traits
+﻿namespace ShadowrunTracker.Data.Traits
 {
+    using System.Runtime.Serialization;
+
     [DataContract]
-    public class LeveledTrait : Trait, ILeveledTrait
+    public class LeveledTrait : Trait
     {
         [DataMember]
         public int Rating { get; set; }

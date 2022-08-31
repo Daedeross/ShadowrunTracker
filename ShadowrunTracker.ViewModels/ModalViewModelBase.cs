@@ -1,32 +1,23 @@
-﻿using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Text;
-using System.Windows.Input;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
-    public abstract class ModalViewModelBase<T> : ViewModelBase, IModalViewModel<T>
-    {
-        protected Subject<T> m_Complete;
-        public IObservable<T> Complete => m_Complete;
+    using ReactiveUI;
+    using System;
+    using System.Windows.Input;
 
-        public ICommand OkCommand { get; }
+    public abstract class ModalViewModelBase : ViewModelBase, IModalViewModel
+    {
+        public ICommand OkCommand { get; protected set; }
 
         public ICommand CancelCommand { get; }
 
         public ModalViewModelBase(IObservable<bool>? okCanExecute = null)
         {
-            m_Complete = new Subject<T>();
 
             var ok = okCanExecute is null
                 ? ReactiveCommand.Create(OnOk, null, RxApp.MainThreadScheduler)
                 : ReactiveCommand.Create(OnOk, okCanExecute, RxApp.MainThreadScheduler);
             var cancel = ReactiveCommand.Create(OnCancel);
 
-            _disposables.Add(m_Complete);
             _disposables.Add(ok);
             _disposables.Add(cancel);
 

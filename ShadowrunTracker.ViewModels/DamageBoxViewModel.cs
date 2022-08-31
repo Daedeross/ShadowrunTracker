@@ -1,7 +1,7 @@
-﻿using ReactiveUI;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using ReactiveUI;
+
     public class DamageBoxViewModel : ReactiveObject, IDamageBoxViewModel
     {
         public bool IsFilled { get; init; }

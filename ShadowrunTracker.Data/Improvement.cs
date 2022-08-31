@@ -1,10 +1,10 @@
-﻿using ShadowrunTracker.Model;
-using System.Runtime.Serialization;
-
-namespace ShadowrunTracker.Data
+﻿namespace ShadowrunTracker.Data
 {
+    using ShadowrunTracker.Model;
+    using System.Runtime.Serialization;
+
     [DataContract]
-    public class Improvement : IImprovement
+    public class Improvement
     {
         [DataMember]
         public string Name { get; set; } = string.Empty;
@@ -17,18 +17,5 @@ namespace ShadowrunTracker.Data
 
         [DataMember]
         public int Value { get; set; }
-
-        public Improvement()
-        {
-
-        }
-
-        public Improvement(IImprovement i)
-        {
-            Name = i.Name;
-            Target = i.Target;
-            TargetKind = i.TargetKind;
-            Value = i.Value;
-        }
     }
 }

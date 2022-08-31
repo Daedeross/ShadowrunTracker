@@ -1,11 +1,9 @@
-﻿using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Reactive.Disposables;
-using System.Text;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using ReactiveUI;
+    using System;
+    using System.Reactive.Disposables;
+
     public abstract class ViewModelBase : ReactiveObject, IViewModel, IDisposable
     {
         protected readonly CompositeDisposable _disposables = new();

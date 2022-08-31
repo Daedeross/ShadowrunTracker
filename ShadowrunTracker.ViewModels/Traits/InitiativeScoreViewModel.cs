@@ -1,8 +1,8 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.Model;
-
-namespace ShadowrunTracker.ViewModels.Traits
+﻿namespace ShadowrunTracker.ViewModels.Traits
 {
+    using ReactiveUI;
+    using ShadowrunTracker.Model;
+
     public class InitiativeScoreViewModel : ReactiveObject, IInitiativeScoreViewModel
     {
         public InitiativeState State { get; init; }

@@ -1,25 +1,11 @@
 ﻿#nullable disable
 
-using ReactiveUI;
-using ShadowrunTracker.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-
 namespace ShadowrunTracker.Wpf.Views
 {
+    using ReactiveUI;
+    using ShadowrunTracker.ViewModels;
+    using System.Reactive.Disposables;
+
     /// <summary>
     /// Interaction logic for RencounterParticipantView.xaml
     /// </summary>
@@ -40,8 +26,8 @@ namespace ShadowrunTracker.Wpf.Views
                 this.OneWayBind(ViewModel, vm => vm.Player, v => v.PlayerText.Text, x => $"({x})")
                     .DisposeWith(d);
 
-                this.OneWayBind(ViewModel, vm => vm.Player, v => v.PlayerText.Text)
-                    .DisposeWith(d);
+                //this.OneWayBind(ViewModel, vm => vm.Player, v => v.PlayerText.Text)
+                //    .DisposeWith(d);
 
                 ViewModel.WhenAnyValue(vm => vm.CurrentInitiative, vm => vm.CurrentInitiativeDice, (score, dice) => $"{score}+{dice}d6")
                     .BindTo(this, v => v.InitiativeText.Text)

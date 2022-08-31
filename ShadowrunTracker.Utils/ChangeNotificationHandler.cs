@@ -1,22 +1,21 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.Model;
-using ShadowrunTracker.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-
-namespace ShadowrunTracker.Utils
+﻿namespace ShadowrunTracker.Utils
 {
+    using ReactiveUI;
+    using ShadowrunTracker.Model;
+    using ShadowrunTracker.ViewModels;
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Linq;
+    using System.Linq.Expressions;
+    using System.Reflection;
+
     public class ChangeNotificationHandler<T>: IDisposable
         where T : IViewModel, IReactiveObject
     {
-        private static Func<Dictionary<string, object?>> _cacheFactory;
-        private static IReadOnlyDictionary<string, Func<T, object>> _getters;
-        private static IReadOnlyDictionary<string, string[]> _propertyDependents;
+        private static readonly Func<Dictionary<string, object?>> _cacheFactory;
+        private static readonly IReadOnlyDictionary<string, Func<T, object>> _getters;
+        private static readonly IReadOnlyDictionary<string, string[]> _propertyDependents;
 
         static ChangeNotificationHandler()
         {
@@ -125,7 +124,6 @@ namespace ShadowrunTracker.Utils
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
 
         #endregion

@@ -1,15 +1,34 @@
-﻿using ShadowrunTracker.Model;
-using ShadowrunTracker.Data;
-using ShadowrunTracker.Utils;
-
-namespace ShadowrunTracker.ViewModels.Traits
+﻿namespace ShadowrunTracker.ViewModels.Traits
 {
+    using ReactiveUI;
+    using ShadowrunTracker.Data.Traits;
+    using ShadowrunTracker.Utils;
+    using System.Collections.Generic;
+    using System.Reactive.Disposables;
+
     public class LeveledTraitViewModel : TraitViewModel, ILeveledTraitViewModel
     {
-        public LeveledTraitViewModel(ILeveledTrait trait)
-            : base(trait)
+        protected static readonly ISet<string> _leveledTraitRecordProperties;
+
+        static LeveledTraitViewModel()
         {
-            m_BaseRating = trait.Rating;
+            _leveledTraitRecordProperties = new HashSet<string>
+            {
+                nameof(BaseRating),
+                nameof(BonusRating),
+            };
+            _leveledTraitRecordProperties.UnionWith(_traitRecordProperties);
+        }
+
+        public LeveledTraitViewModel(LeveledTrait record)
+            : base(record)
+        {
+            m_BaseRating = record.BaseRating;
+            m_BonusRating = record.BonusRating;
+
+            _augmentedRating = this.WhenAnyValue(x => x.BaseRating, x => x.BonusRating, (baseRating, bonusRating) => baseRating + bonusRating)
+                .ToProperty(this, x => x.AugmentedRating)
+                .DisposeWith(_disposables);
         }
 
         private int m_BaseRating;
@@ -26,8 +45,27 @@ namespace ShadowrunTracker.ViewModels.Traits
             set => this.SetAndRaiseIfChanged(ref m_BonusRating, value);
         }
 
-        [DependsOn(nameof(BaseRating))]
-        [DependsOn(nameof(BonusRating))]
-        public int AugmentedRating => m_BaseRating + m_BonusRating;
+        private ObservableAsPropertyHelper<int> _augmentedRating;
+        public int AugmentedRating => _augmentedRating.Value;
+
+        protected void Update(LeveledTrait record)
+        {
+            try
+            {
+                PushUpdate = false;
+                DoUpdate(record);
+            }
+            finally
+            {
+                PushUpdate = true;
+            }
+        }
+
+        protected void DoUpdate(LeveledTrait record)
+        {
+            base.DoUpdate(record);
+            BaseRating = record.BaseRating;
+            BonusRating = record.BonusRating;
+        }
     }
 }

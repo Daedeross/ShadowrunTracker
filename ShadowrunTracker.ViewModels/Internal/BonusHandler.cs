@@ -1,13 +1,11 @@
-﻿using ShadowrunTracker.Utils;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-
-namespace ShadowrunTracker.ViewModels.Internal
+﻿namespace ShadowrunTracker.ViewModels.Internal
 {
+    using ShadowrunTracker.Utils;
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Linq;
+
     internal class BonusHandler : IDisposable
     {
         private readonly IImprovementViewModel _improvement;
@@ -105,7 +103,6 @@ namespace ShadowrunTracker.ViewModels.Internal
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

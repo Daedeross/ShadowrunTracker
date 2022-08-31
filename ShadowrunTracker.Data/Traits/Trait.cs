@@ -1,11 +1,10 @@
-﻿using ShadowrunTracker.Data;
-using System.Runtime.Serialization;
-
-namespace ShadowrunTracker.Data.Traits
+﻿namespace ShadowrunTracker.Data.Traits
 {
+    using System.Runtime.Serialization;
+
     [DataContract]
     [KnownType(nameof(KnownTypes))]
-    public abstract class Trait : ITrait
+    public abstract class Trait
     {
         [DataMember(IsRequired = true)]
         public string Name { get; set; } = string.Empty;

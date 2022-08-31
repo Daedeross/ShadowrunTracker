@@ -1,18 +1,20 @@
-﻿using ReactiveUI;
-using ShadowrunTracker.Model;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
-
-namespace ShadowrunTracker.ViewModels
+﻿namespace ShadowrunTracker.ViewModels
 {
+    using DynamicData;
+    using ReactiveUI;
+    using ShadowrunTracker.Data;
+    using ShadowrunTracker.Model;
+    using ShadowrunTracker.Utils;
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.Collections.Specialized;
+    using System.Linq;
+    using System.Reactive;
+    using System.Reactive.Disposables;
+    using System.Reactive.Linq;
+    using System.Windows.Input;
+
     public class CombatRoundViewModel : CanRequestConfirmationBase, ICombatRoundViewModel, IDisposable
     {
         private const string EndPassConfirmMessage = "Some participants have yet to act. Continue?";
@@ -20,38 +22,55 @@ namespace ShadowrunTracker.ViewModels
         private const int ActionCost = 10;
 
         private readonly IViewModelFactory _viewModelFactory;
+        private readonly IDataStore<Guid> _store;
 
-        public CombatRoundViewModel(IViewModelFactory viewModelFactory, IEnumerable<IParticipantInitiativeViewModel> participants)
+        private bool _pushUpdate = true;
+
+        public CombatRoundViewModel(IViewModelFactory viewModelFactory,
+            IDataStore<Guid> store,
+            IEnumerable<IParticipantInitiativeViewModel>? participants = null,
+            CombatRound? record = null)
         {
             _viewModelFactory = viewModelFactory;
+            _store = store;
 
-            var nextToAct = ReactiveCommand.Create(NextToAct);
-            var endPass = ReactiveCommand.Create(EndPass);
-            var endRound = ReactiveCommand.Create(EndRound);
+            Id = record?.Id ?? Guid.NewGuid();
 
-            NextToActCommad = nextToAct;
-            EndPassCommand = endPass;
-            EndRoundCommand = endRound;
-
-            _disposables.Add(nextToAct);;
-            _disposables.Add(endPass);
-            _disposables.Add(endRound);
+            NextToActCommad = ReactiveCommand.Create(NextToAct)
+                .DisposeWith(_disposables);
+            EndPassCommand = ReactiveCommand.Create(EndPass)
+                .DisposeWith(_disposables);
+            EndRoundCommand = ReactiveCommand.Create(EndRound)
+                .DisposeWith(_disposables);
 
             InitiativePasses.CollectionChanged += this.OnInitiativePassesCollectionChanged;
 
-            Participants = new ObservableCollection<IParticipantInitiativeViewModel>(participants);
+            Participants = new ObservableCollection<IParticipantInitiativeViewModel>(participants ?? Array.Empty<IParticipantInitiativeViewModel>());
 
-            m_CurrentPass = _viewModelFactory.CreatePass(Participants);
-            InitiativePasses.Add(CurrentPass);
+            if (Participants.Any())
+            {
+                m_CurrentPass = _viewModelFactory.CreatePass(Participants);
+                m_CurrentPass.Index = 0;
+                InitiativePasses.Add(m_CurrentPass);
+            }
+
+            Participants.CollectionChanged += this.OnCollectionChanged;
+            InitiativePasses.CollectionChanged += this.OnCollectionChanged;
+
+            if (record != null)
+            {
+                Update(record);
+            }
         }
 
+        public Guid Id { get; }
 
         public ObservableCollection<IParticipantInitiativeViewModel> Participants { get; }
 
         public ObservableCollection<IInitiativePassViewModel> InitiativePasses { get; } = new ObservableCollection<IInitiativePassViewModel>();
 
-        private IInitiativePassViewModel m_CurrentPass;
-        public IInitiativePassViewModel CurrentPass
+        private IInitiativePassViewModel? m_CurrentPass;
+        public IInitiativePassViewModel? CurrentPass
         {
             get => m_CurrentPass;
             protected set => this.RaiseAndSetIfChanged(ref m_CurrentPass, value);
@@ -65,7 +84,7 @@ namespace ShadowrunTracker.ViewModels
 
         private void EndRound()
         {
-            if (CurrentPass.Participants.Any(p => (!p.Acted && p.InitiativeScore > 0)) == true)
+            if (CurrentPass != null && CurrentPass.Participants.Any(p => (!p.Acted && p.InitiativeScore > 0)) == true)
             {
                 RequestConfirmation(EndPassConfirmMessage, StartNextRound);
             }
@@ -81,7 +100,7 @@ namespace ShadowrunTracker.ViewModels
 
         public void EndPass()
         {
-            if (CurrentPass.Participants.All(p => !p.Acted || p.InitiativeScore > 0) == true)
+            if (CurrentPass != null && CurrentPass.Participants.All(p => !p.Acted || p.InitiativeScore > 0) == true)
             {
                 RequestConfirmation(EndPassConfirmMessage, StartNextPass);
             }
@@ -101,7 +120,8 @@ namespace ShadowrunTracker.ViewModels
 
             if (Participants.Any(p => p.InitiativeScore > 0))
             {
-                var newPass = new InitiativePassViewModel(Participants);
+                var newPass = _viewModelFactory.CreatePass(Participants);
+                newPass.Index = InitiativePasses.Count;
                 InitiativePasses.Add(newPass);
                 CurrentPass = newPass;
             }
@@ -123,7 +143,7 @@ namespace ShadowrunTracker.ViewModels
 
         public void NextToAct()
         {
-            CurrentPass.Next();
+            CurrentPass?.Next();
         }
 
         private void OnInitiativePassesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -150,7 +170,7 @@ namespace ShadowrunTracker.ViewModels
             if (addToPass)
             {
                 participant.Acted = acted;
-                CurrentPass.Participants.Add(participant);
+                CurrentPass?.Participants.Add(participant);
             }
         }
 
@@ -163,7 +183,7 @@ namespace ShadowrunTracker.ViewModels
         {
             if (Participants.Remove(participant))
             {
-                CurrentPass.Participants.Remove(participant);
+                CurrentPass?.Participants.Remove(participant);
 
                 return true;
             }
@@ -186,6 +206,162 @@ namespace ShadowrunTracker.ViewModels
             }
         }
 
+        RecordBase IRecordViewModel.Record => ToRecord();
+
+        public CombatRound Record => ToRecord();
+
+        public CombatRound ToRecord()
+        {
+            return new CombatRound
+            {
+                Id = Id,
+                Participants = Participants.Select(p => p.ToRecord()).ToList(),
+                InitiativePasses = InitiativePasses.Select(ip => ip.ToRecord()).ToList()
+            };
+        }
+
+        public void Update(CombatRound record)
+        {
+            try
+            {
+                _pushUpdate = false;
+
+                if (record.Id != Id)
+                {
+                    throw new ArgumentException($"Record id does not match: ViewModel Id: {Id} | Record Id: {record.Id}", nameof(record));
+                }
+
+                UpdateParticipants(record.Participants);
+                UpdatePasses(record.InitiativePasses);
+
+                if (record.CurrentPassIndex < 0 || record.CurrentPassIndex >= InitiativePasses.Count)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(record.CurrentPassIndex));
+                }
+                else
+                {
+                    CurrentPass = InitiativePasses[record.CurrentPassIndex];
+                }
+            }
+            finally
+            {
+                _pushUpdate = true;
+            }
+        }
+
+        #region Update Helpers
+
+        private void UpdateParticipants(IEnumerable<ParticipantInitiative> incomming)
+        {
+            var oldIds = Participants.Select(p => (p.Id, CharacterId: p.Character.Id)).ToList();
+            var newIds = incomming.Select(p => (p.Id, p.CharacterId)).ToList();
+
+            var removed = oldIds.Except(newIds);
+            var added = newIds.Except(oldIds)
+                .Join(incomming, tuple => tuple.Id, record => record.Id, (tuple, record) => record);
+
+            RemoveParticipantsById(removed.Select(tuple => tuple.CharacterId));
+            AddParticipantsFromRecords(added);
+        }
+
+        private void RemoveParticipantsById(IEnumerable<Guid> ids)
+        {
+            if (ids.Any())
+            {
+                foreach (var id in ids)
+                {
+                    var vm = _store.TryGet<ICharacterViewModel>(id);
+                    if (vm.HasValue)
+                    {
+                        RemoveParticipant(vm.Value);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"Id {id} not found in store");
+                    }
+                }
+            }
+        }
+
+        private void AddParticipantsFromRecords(IEnumerable<ParticipantInitiative> records)
+        {
+            if (records.Any())
+            {
+                foreach (var participant in records)
+                {
+                    var vm = _store.TryGet<IParticipantInitiativeViewModel>(participant.Id);
+                    if (vm.HasValue)
+                    {
+                        Participants.Add(vm.Value);
+                        vm.Value.Update(participant);
+                    }
+                    else
+                    {
+                        var charVm = _store.TryGet<ICharacterViewModel>(participant.CharacterId);
+                        if (charVm.HasValue)
+                        {
+                            AddParticipant(_viewModelFactory.Create<IParticipantInitiativeViewModel, ParticipantInitiative>(participant));
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException($"Id {participant.Id} not found in store");
+                        }
+                    }
+                }
+            }
+        }
+
+        private void UpdatePasses(IEnumerable<InitiativePass> incomming)
+        {
+            var oldIds = InitiativePasses.Select(p => p.Id).ToList();
+            var newIds = incomming.Select(p => p.Id).ToList();
+
+            var removed = oldIds.Except(newIds);
+            var added = newIds.Except(oldIds)
+                .Join(incomming, id => id, record => record.Id, (id, record) => record);
+
+            if (removed.Any())
+            {
+                throw new NotSupportedException("Unable to remove InitiativePasses");
+            }
+
+            AddPassesFromRecords(added);
+            InitiativePasses.SortBy(p => p.Index);
+
+            var joined = InitiativePasses.Join(incomming, vm => vm.Id, record => record.Id, (vm, record) => (vm, record)).ToList();
+            if (joined.Count != InitiativePasses.Count)
+            {
+                throw new InvalidOperationException("Mismatched collection size.");
+            }
+
+            foreach (var (vm, record) in joined)
+            {
+                vm.Update(record);
+            }
+        }
+
+        private void AddPassesFromRecords(IEnumerable<InitiativePass> added)
+        {
+            if (added.Any())
+            {
+                foreach (var record in added)
+                {
+                    var vm = _viewModelFactory.CreatePass(new IParticipantInitiativeViewModel[0], record);
+                    InitiativePasses.Add(vm);
+                }
+            }
+        }
+
+        private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (_pushUpdate && ReferenceEquals(this, sender))
+            {
+                this.RaisePropertyChanged(nameof(Record));
+            }
+        }
+
+        #endregion
+
         #region IDisposable
 
         private bool _disposedValue;
@@ -194,6 +370,9 @@ namespace ShadowrunTracker.ViewModels
         {
             if (!_disposedValue)
             {
+                InitiativePasses.CollectionChanged -= OnCollectionChanged;
+                Participants.CollectionChanged -= OnCollectionChanged;
+
                 if (disposing)
                 {
                     foreach (var pass in InitiativePasses)

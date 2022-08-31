@@ -5,7 +5,7 @@
                           xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
                           xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
                           xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-                          xmlns:vmi="clr-namespace:ShadowrunTracker.ViewModels;assembly=ShadowrunTracker.Contract"
+                          xmlns:vmi="clr-namespace:ShadowrunTracker.ViewModels;assembly=ShadowrunTracker.ViewModels.Contract"
                           xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
                           xmlns:rxui="http://reactiveui.net"
                           xmlns:sys="clr-namespace:System;assembly=mscorlib"
@@ -41,7 +41,7 @@
                     Style="{StaticResource MaterialDesignFloatingActionMiniSecondaryDarkButton}"
                     Content="{materialDesign:PackIcon Kind=DiceMultiple, Size={StaticResource IconSize}}"
                     Command="{Binding RollAll}"></Button>
-            <ListBox ItemsSource="{Binding Participants}"
+            <ListBox x:Name="ParticipantsList" ItemsSource="{Binding Participants}"
                      Grid.IsSharedSizeScope="True"
                      Grid.Row="1"
                      Grid.ColumnSpan="5">

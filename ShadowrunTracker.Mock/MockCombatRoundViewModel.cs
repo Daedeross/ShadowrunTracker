@@ -10,7 +10,7 @@ namespace ShadowrunTracker.Mock
     public class MockCombatRoundViewModel : CombatRoundViewModel
     {
         public MockCombatRoundViewModel()
-            : base(new MockViewModelFactory(), TestCharacters.TestGroup.Select(c => TestCharacters.CreateParticipant(c)))
+            : base(new MockViewModelFactory(), TestData.TestCharacters.DataStore, TestCharacters.TestGroup.Select(c => TestCharacters.CreateParticipant(c)))
         {
             foreach (var participant in TestCharacters.TestGroup)
             {
