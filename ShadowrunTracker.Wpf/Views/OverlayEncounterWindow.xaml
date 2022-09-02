@@ -14,19 +14,22 @@
                      AllowsTransparency="True"
                      WindowStyle="None"
                      Topmost="True"
-                     PreviewMouseDown="ReactiveWindow_MouseDown">
+                     PreviewMouseDown="ReactiveWindow_MouseDown"
+                     PreviewMouseWheel="Overlay_MouseWheel"
+                     >
+    <Window.RenderTransform>
+        <ScaleTransform x:Name="WindowScale" />
+    </Window.RenderTransform>
     <Window.Background>
         <SolidColorBrush Color="LightGray" Opacity="0.05" />
     </Window.Background>
-    <Grid>
+    <Grid x:Name="MainGrid">
         <rxui:ViewModelViewHost x:Name="CurrentPassHost"
-                                ViewContract="Overlay"
-                                Grid.Row="0"
-                                HorizontalContentAlignment="Stretch"
-                                HorizontalAlignment="Stretch"
-                                VerticalContentAlignment="Stretch"
-                                VerticalAlignment="Stretch" />
-
-        <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Panel.ZIndex="-1" />
+                            ViewContract="Overlay"
+                            Grid.Row="0"
+                            HorizontalContentAlignment="Stretch"
+                            HorizontalAlignment="Stretch"
+                            VerticalContentAlignment="Stretch"
+                            VerticalAlignment="Stretch" />
     </Grid>
 </rxui:ReactiveWindow>

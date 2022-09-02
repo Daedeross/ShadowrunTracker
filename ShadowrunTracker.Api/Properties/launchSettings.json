@@ -1,6 +1,6 @@
 ﻿{
   "profiles": {
-    "RealTimeCharts.Server": {
+    "ShadowrunTools.Api": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": false,

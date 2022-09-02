@@ -310,5 +310,15 @@ namespace ShadowrunTracker.Wpf
                 throw new InvalidCastException("Invalid window type.");
             }
         }
+
+        private void RootWindow_Closed(object sender, EventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+
+        private void RootWindow_DpiChanged(object sender, DpiChangedEventArgs e)
+        {
+
+        }
     }
 }

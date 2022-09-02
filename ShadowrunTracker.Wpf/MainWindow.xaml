@@ -21,6 +21,8 @@
                  WindowTitleBrush="{DynamicResource PrimaryHueDarkBrush}"
                  WindowStartupLocation="CenterOwner"
                  mc:Ignorable="d"
+                 Closed="RootWindow_Closed"
+                 DpiChanged="RootWindow_DpiChanged"
                  Title="Shadowrun Tracker 5e" Height="675" Width="1200">
     <mah:MetroWindow.Resources>
         <DataTemplate DataType="vmi:IRequestInitiativesViewModel">
