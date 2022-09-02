@@ -67,5 +67,12 @@
 
         [DataMember]
         public List<Improvement> Improvements { get; set; } = new List<Improvement>();
+
+        // In-play information
+        [DataMember]
+        public int PhysicalDamage { get; set; }
+
+        [DataMember]
+        public int StunDamage { get; set; }
     }
 }

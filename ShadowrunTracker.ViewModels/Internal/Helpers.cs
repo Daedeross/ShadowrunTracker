@@ -12,7 +12,11 @@
                 throw new ArgumentNullException(nameof(pending.InitiativeRoll));
             }
 
-            return factory.Create(pending.Character, new ParticipantInitiative { InitiativeRoll = pending.InitiativeRoll });
+            var roll = pending.InitiativeRoll;
+            roll.SiezedInitiative = pending.SiezeInitiative;
+            roll.Blitzed = pending.Blitz;
+
+            return factory.Create(pending.Character, new ParticipantInitiative { InitiativeRoll = roll });
         }
     }
 }

@@ -55,6 +55,7 @@
             Character = character;
             _roll = record.InitiativeRoll ?? throw new ArgumentNullException(nameof(record.InitiativeRoll));
             m_InitiativeScore = _roll.Result;
+            m_SeizedInitiative = _roll.SiezedInitiative;
 
             SetPhysicalTrack();
             SetStunTrack();

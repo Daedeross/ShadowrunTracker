@@ -3,6 +3,7 @@
     using ShadowrunTracker.Data;
     using ShadowrunTracker.Data.Traits;
     using ShadowrunTracker.ViewModels;
+    using System.Runtime.InteropServices;
 
     public static class DataExtensions
     {
@@ -72,7 +73,9 @@
                 PainResistence = character.PainResistence,
                 SpellsSustained = character.SpellsSustained,
                 Skills = character.Skills.Select(ToModel).ToList(),
-                Improvements = character.Improvements.Select(ToModel).ToList()
+                Improvements = character.Improvements.Select(ToModel).ToList(),
+                PhysicalDamage = character.PhysicalDamage,
+                StunDamage = character.StunDamage,
             };
         }
 
@@ -80,18 +83,32 @@
             where TViewModel : IRecordViewModel<TRecord>
             where TRecord : IHaveId
         {
-            var cached = store.TryGet<TViewModel>(record.Id);
-            if (cached.HasValue)
+            try
             {
-                cached.Value.Update(record);
-                return cached.Value;
+                var cached = store.TryGet<TViewModel>(record.Id);
+                if (cached.HasValue)
+                {
+                    cached.Value.Update(record);
+                    return cached.Value;
+                }
+                else
+                {
+                    var result = factory(record);
+                    store.Set(record.Id, result);
+                    return result;
+                }
             }
-            else
+            catch (Exception e)
             {
-                var result = factory(record);
-                store.Set(record.Id, result);
-                return result;
+
+                throw;
             }
+        }
+        public static TViewModel CreateOrUpdate<TRecord, TViewModel>(this IDataStore<Guid> store, TRecord record, IViewModelFactory factory)
+            where TViewModel : IRecordViewModel<TRecord>
+            where TRecord : RecordBase
+        {
+            return CreateOrUpdate(store, record, factory.Create<TViewModel, TRecord>);
         }
 
         public static TViewModel UpdateOrThrow<TRecord, TViewModel>(this IDataStore<Guid> store, TRecord record)
@@ -104,15 +121,15 @@
         public static IViewModel SyncFromRecord(this IDataStore<Guid> store, IViewModelFactory factory, RecordBase record) => record switch
         {
             // only encounter can be created out of context
-            Encounter encounter => store.CreateOrUpdate(encounter, r => factory.Create<IPlayerEncounterViewModel, Encounter>(r)),
+            Encounter encounter => store.CreateOrUpdate(encounter, factory.Create<IPlayerEncounterViewModel, Encounter>),
             // everyting else can only be created in context (i.e. in an update of their parent entity)
             // for now, it will throw an exception when an update comes in for an orphaned entity
-            Character character => store.UpdateOrThrow<Character, ICharacterViewModel>(character),
-            CombatRound combatRound => store.UpdateOrThrow<CombatRound, ICombatRoundViewModel>(combatRound),
-            ParticipantInitiative participant => store.UpdateOrThrow<ParticipantInitiative, IParticipantInitiativeViewModel>(participant),
-            InitiativePass pass => store.UpdateOrThrow<InitiativePass, IInitiativePassViewModel>(pass),
-            Skill skill => store.UpdateOrThrow<Skill, ISkillViewModel>(skill),
-            Improvement improvement => store.UpdateOrThrow<Improvement, IImprovementViewModel>(improvement),
+            Character character => store.CreateOrUpdate(character, factory.Create<ICharacterViewModel, Character>),
+            CombatRound combatRound => store.CreateOrUpdate(combatRound, r => factory.CreateRound(Array.Empty<IParticipantInitiativeViewModel>(), r)),
+            ParticipantInitiative participant => store.CreateOrUpdate<ParticipantInitiative, IParticipantInitiativeViewModel>(participant, factory),
+            InitiativePass pass => store.CreateOrUpdate(pass, r => factory.CreatePass(Array.Empty<IParticipantInitiativeViewModel>(), r)),
+            Skill skill => store.CreateOrUpdate<Skill, ISkillViewModel>(skill, factory),
+            Improvement improvement => store.CreateOrUpdate<Improvement, IImprovementViewModel>(improvement, factory),
 
             _ => throw new NotSupportedException()
         };

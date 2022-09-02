@@ -3,6 +3,7 @@
     using ReactiveUI;
     using ShadowrunTracker.Data;
     using ShadowrunTracker.Model;
+    using ShadowrunTracker.Utils;
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
@@ -20,10 +21,18 @@
             nameof(ActiveParticipant)
         };
 
+        private static readonly ISet<string> _participantWatchetProperties = new HashSet<string>
+        {
+            nameof(IParticipantInitiativeViewModel.SeizedInitiative),
+            nameof(IParticipantInitiativeViewModel.InitiativeScore),
+            nameof(IParticipantInitiativeViewModel.Acted),
+            nameof(IParticipantInitiativeViewModel.CanAct),
+        };
+
         private readonly IDataStore<Guid> _store;
-        private readonly List<IParticipantInitiativeViewModel> _acted;
-        private readonly List<IParticipantInitiativeViewModel> _notActed;
-        private readonly List<IParticipantInitiativeViewModel> _notActing;
+        private List<IParticipantInitiativeViewModel> _acted;
+        private List<IParticipantInitiativeViewModel> _notActed;
+        private List<IParticipantInitiativeViewModel> _notActing;
 
         private bool _pushUpdate = true;
 
@@ -174,6 +183,17 @@
                     throw new InvalidOperationException($"Id {id} not found in _store");
                 }
             }
+        }
+
+        private void Resort()
+        {
+            Participants.Sort(ParticipantInitiativeComparer.Default);
+
+            _acted = new List<IParticipantInitiativeViewModel>();
+            _notActed = Participants.Where(p => p.InitiativeScore > 0).OrderBy(p => p, ParticipantInitiativeReverseComparer.Default).ToList();
+            _notActing = Participants.Where(p => p.InitiativeScore <= 0).ToList();
+
+            ActiveParticipant = _notActed.FirstOrDefault();
         }
 
         #endregion
@@ -337,8 +357,9 @@
         {
             if (e is IParticipantInitiativeViewModel participant)
             {
-                if (e.PropertyName == nameof(IParticipantInitiativeViewModel.InitiativeScore))
+                if (_participantWatchetProperties.Contains(e.PropertyName))
                 {
+                    Resort();
                 }
             }
         }
