@@ -115,7 +115,10 @@
             foreach (var particpiant in Participants)
             {
                 particpiant.Acted = false;
-                particpiant.InitiativeScore -= ActionCost;
+                if (particpiant.InitiativeScore > 0)
+                {
+                    particpiant.InitiativeScore -= ActionCost;
+                }
             }
 
             if (Participants.Any(p => p.InitiativeScore > 0))

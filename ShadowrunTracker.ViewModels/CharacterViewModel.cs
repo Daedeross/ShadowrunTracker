@@ -50,7 +50,9 @@
             nameof(PainResistence),
             nameof(SpellsSustained),
             nameof(Skills),
-            nameof(Improvements)
+            nameof(Improvements),
+            nameof(PhysicalDamage),
+            nameof(StunDamage),
         };
 
         private readonly Dictionary<IImprovementViewModel, BonusHandler> _bonusHandlers;
@@ -894,7 +896,9 @@
                 m_BaseResonance = record.Resonance;
                 PainEditor = record.PainEditor;
                 PainResistence = record.PainResistence;
+                PhysicalDamage = record.PhysicalDamage;
                 SpellsSustained = record.SpellsSustained;
+                StunDamage = record.StunDamage;
                 UpdateSkills(record.Skills);
                 UpdateImprovements(record.Improvements);
             }

@@ -14,6 +14,8 @@
         [DataMember]
         public bool Blitzed { get; set; }
         [DataMember]
+        public bool SiezedInitiative { get; set; }
+        [DataMember]
         public InitiativeState CurrentState { get; set; }
     }
 }
